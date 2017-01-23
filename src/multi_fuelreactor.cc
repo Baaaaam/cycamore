@@ -88,7 +88,7 @@ void MFReactor::EnterNotify() {
     ss << "prototype '" << prototype() << "' has " << pref_change_values.size()
        << " pref_change_values vals, expected " << n << "\n";
   }
-
+  
   if (ss.str().size() > 0) {
     throw cyclus::ValueError(ss.str());
   }
