@@ -287,6 +287,7 @@ void Enrichment::GetMatlTrades(
                              " its SWU capacity.");
   }
 }
+
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void Enrichment::AddMat_(cyclus::Material::Ptr mat) {
   // Elements and isotopes other than U-235, U-238 are sent directly to tails
@@ -424,6 +425,42 @@ cyclus::Material::Ptr Enrichment::Enrich_(cyclus::Material::Ptr mat,
 
   return response;
 }
+
+cyclus::Material::Ptr Enrichment::equivalent_u8(cyclus::Material::Ptr mat) {
+
+  double initial_q = mat->quantity();
+
+  cyclus::CompMap to_substract;
+  double q_to_switch = 0;
+
+
+  for( int i = 0; i < (int)ux.size(); i++){
+    cyclus::toolkit::MatQuery mq(mat);
+    double nuc_i_mass = mq.mass(ux[i].first);
+
+    q_to_switch += nuc_i_mass;
+    to_substract[ux[i].first] = nuc_i_mass;
+  }
+  cyclus::Composition::Ptr c_to_remove = cyclus::Composition::CreateFromMass(to_substract);
+  cyclus::Material::Ptr equiv_mat =  mat->ExtractComp(q_to_switch , c_to_remove);
+
+
+  cyclus::CompMap to_add;
+  to_add[922350000] = q_to_switch;
+  cyclus::Composition::Ptr c_to_add = cyclus::Composition::CreateFromMass(to_add);
+  equiv_mat->Absorb( cyclus::Material::CreateUntracked( q_to_switch , c_to_add) );
+
+  if (equiv_mat->quantity() != mat->quantity()){
+    std::cout << "Oupsy !!" << std::endl;
+  }
+
+  return equiv_mat;
+}
+
+
+
+
+
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void Enrichment::RecordEnrichment_(double natural_u, double swu) {

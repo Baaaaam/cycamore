@@ -241,7 +241,12 @@ class Enrichment : public cyclus::Facility {
   }
 
  private:
-  ///   @brief adds a material into the natural uranium inventory
+
+ std::vector<std::pair<cyclus::Nuc,double>> ux;
+
+  cyclus::Material::Ptr equivalent_u8(cyclus::Material::Ptr mat);
+
+ ///   @brief adds a material into the natural uranium inventory
   ///   @throws if the material is not the same composition as the feed_recipe
   void AddMat_(cyclus::Material::Ptr mat);
 
