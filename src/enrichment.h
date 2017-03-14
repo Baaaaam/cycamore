@@ -8,38 +8,47 @@
 
 namespace cycamore {
 
+///  @brief builds a fake material replacing specials nuclides by U-238,
+///  return a pair with the equivalent material with U-238 in place of
+///  special nuclides (conserving the mass), and a material containing the
+///  replaced nuclides
+std::pair<cyclus::Material::Ptr, cyclus::Material::Ptr> equivalent_u8(
+    cyclus::Material::Ptr mat, std::vector<std::pair<cyclus::Nuc, double>> ux);
+
+
 /// @class SWUConverter
 ///
 /// @brief The SWUConverter is a simple Converter class for material to
 /// determine the amount of SWU required for their proposed enrichment
 class SWUConverter : public cyclus::Converter<cyclus::Material> {
  public:
-  SWUConverter(double feed_commod, double tails) : feed_(feed_commod),
-    tails_(tails) {}
+  SWUConverter(double feed_commod, double tails,
+               std::vector<std::pair<cyclus::Nuc, double>> ux)
+      : feed_(feed_commod), tails_(tails), ux_(ux) {}
   virtual ~SWUConverter() {}
 
   /// @brief provides a conversion for the SWU required
   virtual double convert(
-      cyclus::Material::Ptr m,
-      cyclus::Arc const * a = NULL,
-      cyclus::ExchangeTranslationContext<cyclus::Material>
-          const * ctx = NULL) const {
-    cyclus::toolkit::Assays assays(feed_, cyclus::toolkit::UraniumAssay(m),
+      cyclus::Material::Ptr m, cyclus::Arc const* a = NULL,
+      cyclus::ExchangeTranslationContext<cyclus::Material> const* ctx =
+          NULL) const {
+    cyclus::Material::Ptr f_m = equivalent_u8(m, ux_).first;
+    cyclus::toolkit::Assays assays(feed_, cyclus::toolkit::UraniumAssay(f_m),
                                    tails_);
-    return cyclus::toolkit::SwuRequired(m->quantity(), assays);
+    return cyclus::toolkit::SwuRequired(f_m->quantity(), assays);
   }
 
   /// @returns true if Converter is a SWUConverter and feed and tails equal
   virtual bool operator==(Converter& other) const {
     SWUConverter* cast = dynamic_cast<SWUConverter*>(&other);
-    return cast != NULL &&
-    feed_ == cast->feed_ &&
-    tails_ == cast->tails_;
+    return cast != NULL && feed_ == cast->feed_ && tails_ == cast->tails_;
   }
 
  private:
   double feed_, tails_;
+  std::vector<std::pair<cyclus::Nuc,double>> ux_;
 };
+
 
 /// @class NatUConverter
 ///
@@ -48,40 +57,41 @@ class SWUConverter : public cyclus::Converter<cyclus::Material> {
 /// enrichment
 class NatUConverter : public cyclus::Converter<cyclus::Material> {
  public:
-  NatUConverter(double feed_commod, double tails) : feed_(feed_commod),
-    tails_(tails) {}
+  NatUConverter(double feed_commod, double tails,
+                std::vector<std::pair<cyclus::Nuc, double>> ux)
+      : feed_(feed_commod), tails_(tails), ux_(ux) {}
   virtual ~NatUConverter() {}
 
   virtual std::string version() { return CYCAMORE_VERSION; }
 
   /// @brief provides a conversion for the amount of natural Uranium required
   virtual double convert(
-      cyclus::Material::Ptr m,
-      cyclus::Arc const * a = NULL,
-      cyclus::ExchangeTranslationContext<cyclus::Material>
-          const * ctx = NULL) const {
-    cyclus::toolkit::Assays assays(feed_, cyclus::toolkit::UraniumAssay(m),
+      cyclus::Material::Ptr m, cyclus::Arc const* a = NULL,
+      cyclus::ExchangeTranslationContext<cyclus::Material> const* ctx =
+          NULL) const {
+    cyclus::Material::Ptr f_m = equivalent_u8(m, ux_).first;
+    cyclus::toolkit::Assays assays(feed_, cyclus::toolkit::UraniumAssay(f_m),
                                    tails_);
-    cyclus::toolkit::MatQuery mq(m);
+    cyclus::toolkit::MatQuery mq(f_m);
     std::set<cyclus::Nuc> nucs;
     nucs.insert(922350000);
     nucs.insert(922380000);
 
     double natu_frac = mq.mass_frac(nucs);
-    double natu_req = cyclus::toolkit::FeedQty(m->quantity(), assays);
+    double natu_req = cyclus::toolkit::FeedQty(f_m->quantity(), assays);
     return natu_req / natu_frac;
   }
 
   /// @returns true if Converter is a NatUConverter and feed and tails equal
   virtual bool operator==(Converter& other) const {
     NatUConverter* cast = dynamic_cast<NatUConverter*>(&other);
-    return cast != NULL &&
-    feed_ == cast->feed_ &&
-    tails_ == cast->tails_;
+    return cast != NULL && feed_ == cast->feed_ && tails_ == cast->tails_;
   }
 
  private:
   double feed_, tails_;
+  std::vector<std::pair<cyclus::Nuc,double>> ux_;
+
 };
 
 ///  The Enrichment facility is a simple Agent that enriches natural
@@ -244,14 +254,12 @@ class Enrichment : public cyclus::Facility {
 
  std::vector<std::pair<cyclus::Nuc,double>> ux;
 
-  cyclus::Material::Ptr equivalent_u8(cyclus::Material::Ptr mat);
-
- ///   @brief adds a material into the natural uranium inventory
-  ///   @throws if the material is not the same composition as the feed_recipe
+  ///  @brief adds a material into the natural uranium inventory
+  ///  @throws if the material is not the same composition as the feed_recipe
   void AddMat_(cyclus::Material::Ptr mat);
 
-  ///   @brief generates a request for this facility given its current state.
-  ///   Quantity of the material will be equal to remaining inventory size.
+  ///  @brief generates a request for this facility given its current state.
+  ///  Quantity of the material will be equal to remaining inventory size.
   cyclus::Material::Ptr Request_();
 
   ///  @brief Generates a material offer for a given request. The response
