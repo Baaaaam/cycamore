@@ -13,7 +13,7 @@ namespace cycamore {
 ///  special nuclides (conserving the mass), and a material containing the
 ///  replaced nuclides
 std::pair<cyclus::Material::Ptr, cyclus::Material::Ptr> equivalent_u8(
-    cyclus::Material::Ptr mat, std::vector<std::pair<cyclus::Nuc, double>> ux);
+    cyclus::Material::Ptr mat, std::map<cyclus::Nuc, double> ux);
 
 
 /// @class SWUConverter
@@ -23,7 +23,7 @@ std::pair<cyclus::Material::Ptr, cyclus::Material::Ptr> equivalent_u8(
 class SWUConverter : public cyclus::Converter<cyclus::Material> {
  public:
   SWUConverter(double feed_commod, double tails,
-               std::vector<std::pair<cyclus::Nuc, double>> ux)
+               std::map<cyclus::Nuc, double> ux)
       : feed_(feed_commod), tails_(tails), ux_(ux) {}
   virtual ~SWUConverter() {}
 
@@ -46,7 +46,7 @@ class SWUConverter : public cyclus::Converter<cyclus::Material> {
 
  private:
   double feed_, tails_;
-  std::vector<std::pair<cyclus::Nuc,double>> ux_;
+  std::map<cyclus::Nuc,double> ux_;
 };
 
 
@@ -58,7 +58,7 @@ class SWUConverter : public cyclus::Converter<cyclus::Material> {
 class NatUConverter : public cyclus::Converter<cyclus::Material> {
  public:
   NatUConverter(double feed_commod, double tails,
-                std::vector<std::pair<cyclus::Nuc, double>> ux)
+                std::map<cyclus::Nuc, double> ux)
       : feed_(feed_commod), tails_(tails), ux_(ux) {}
   virtual ~NatUConverter() {}
 
@@ -90,7 +90,7 @@ class NatUConverter : public cyclus::Converter<cyclus::Material> {
 
  private:
   double feed_, tails_;
-  std::vector<std::pair<cyclus::Nuc,double>> ux_;
+  std::map<cyclus::Nuc,double> ux_;
 
 };
 
@@ -252,7 +252,6 @@ class Enrichment : public cyclus::Facility {
 
  private:
 
- std::vector<std::pair<cyclus::Nuc,double>> ux;
 
   ///  @brief adds a material into the natural uranium inventory
   ///  @throws if the material is not the same composition as the feed_recipe
@@ -375,6 +374,16 @@ class Enrichment : public cyclus::Facility {
            "facility (kgSWU/timestep) "                                     \
   }
   double swu_capacity;
+
+
+
+  #pragma cyclus var { \
+    "alias": ["enrich_efficiencies", "comp", "eff"], \
+    "uitype": ["oneormore", "nuclide", "double"], \
+    "uilabel": "Special nuclide enrichment Efficiencies", \
+  }
+  std::map< int,double > ux;
+
 
   double current_swu_capacity;
 

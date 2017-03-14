@@ -548,7 +548,7 @@ TEST_F(EnrichmentTest, ConstraintConverters) {
 
   MatQuery mq(target);
   double mass_frac = mq.mass_frac(nucs);
-  std::vector<std::pair<cyclus::Nuc, double>> ux;
+  std::map<cyclus::Nuc, double> ux;
 
   SWUConverter swuc(feed_assay, tails_assay, ux);
   NatUConverter natuc(feed_assay, tails_assay, ux);

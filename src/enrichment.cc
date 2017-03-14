@@ -12,18 +12,20 @@
 namespace cycamore {
 
 std::pair<cyclus::Material::Ptr, cyclus::Material::Ptr> equivalent_u8(
-    cyclus::Material::Ptr mat, std::vector<std::pair<cyclus::Nuc, double>> ux) {
+    cyclus::Material::Ptr mat, std::map<cyclus::Nuc, double> ux) {
   double initial_q = mat->quantity();
 
   cyclus::CompMap to_substract;
   double q_to_switch = 0;
 
-  for (int i = 0; i < (int)ux.size(); i++) {
+  std::map<cyclus::Nuc, double>::iterator it;
+
+  for ( it = ux.begin(); it != ux.end(); it++) {
     cyclus::toolkit::MatQuery mq(mat);
-    double nuc_i_mass = mq.mass(ux[i].first);
+    double nuc_i_mass = mq.mass(it->first);
 
     q_to_switch += nuc_i_mass;
-    to_substract[ux[i].first] = nuc_i_mass;
+    to_substract[it->first] = nuc_i_mass;
   }
   cyclus::Composition::Ptr c_special_nucs =
       cyclus::Composition::CreateFromMass(to_substract);
@@ -454,12 +456,14 @@ cyclus::Material::Ptr Enrichment::Enrich_(cyclus::Material::Ptr mat,
 
   double prod_mass = response->quantity();
   double u5_raw_enrich = UraniumAssay(response);
-  for (int i = 0; i < (int)ux.size(); i++) {
+
+  std::map<cyclus::Nuc, double>::iterator it;
+  for ( it = ux.begin(); it != ux.end(); it++) {
     double nuc_i_enrich_factor =
-        u5_raw_enrich / UraniumAssay(flip_mat.first) * ux[i].second;
+        u5_raw_enrich / UraniumAssay(flip_mat.first) * it->second;
 
     cyclus::toolkit::MatQuery mq(natu_matl);
-    double nuc_i_feed_enrich = mq.mass(ux[i].first) / natu_matl->quantity();
+    double nuc_i_feed_enrich = mq.mass(it->first) / natu_matl->quantity();
     double nuc_i_prod_enrich = nuc_i_feed_enrich * nuc_i_enrich_factor;
 
     double nuc_i_prod_mass = nuc_i_prod_enrich * prod_mass;
@@ -467,7 +471,7 @@ cyclus::Material::Ptr Enrichment::Enrich_(cyclus::Material::Ptr mat,
     // Remove come ux from the material pushed in the tails and add in into the
     // response, do the otherwise for the U-238 to conserve mass balance.
     cyclus::CompMap nuc_to_add;
-    nuc_to_add[ux[i].first] = nuc_i_prod_mass;
+    nuc_to_add[it->first] = nuc_i_prod_mass;
     response->Absorb(cyclus::Material::CreateUntracked(
         nuc_i_prod_mass, cyclus::Composition::CreateFromMass(nuc_to_add)));
     r->ExtractComp(nuc_i_prod_mass, cyclus::Composition::CreateFromMass(nuc_to_add));
