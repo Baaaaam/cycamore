@@ -378,6 +378,7 @@ class Enrichment : public cyclus::Facility {
 
 
   #pragma cyclus var { \
+    "default": {}, \
     "alias": ["enrich_efficiencies", "comp", "eff"], \
     "uitype": ["oneormore", "nuclide", "double"], \
     "uilabel": "Special nuclide enrichment Efficiencies", \

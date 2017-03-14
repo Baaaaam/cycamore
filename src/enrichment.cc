@@ -14,31 +14,38 @@ namespace cycamore {
 std::pair<cyclus::Material::Ptr, cyclus::Material::Ptr> equivalent_u8(
     cyclus::Material::Ptr mat, std::map<cyclus::Nuc, double> ux) {
   double initial_q = mat->quantity();
+  cyclus::Material::Ptr equiv_mat = mat;
+  cyclus::Material::Ptr mat_special_nucs;
 
   cyclus::CompMap to_substract;
   double q_to_switch = 0;
 
   std::map<cyclus::Nuc, double>::iterator it;
 
-  for ( it = ux.begin(); it != ux.end(); it++) {
+  for (it = ux.begin(); it != ux.end(); it++) {
     cyclus::toolkit::MatQuery mq(mat);
     double nuc_i_mass = mq.mass(it->first);
 
     q_to_switch += nuc_i_mass;
     to_substract[it->first] = nuc_i_mass;
   }
-  cyclus::Composition::Ptr c_special_nucs =
-      cyclus::Composition::CreateFromMass(to_substract);
-  cyclus::Material::Ptr mat_special_nucs = cyclus::Material::CreateUntracked(q_to_switch, c_special_nucs);
+  if (to_substract.size() != 0) {
+    cyclus::Composition::Ptr c_special_nucs =
+        cyclus::Composition::CreateFromMass(to_substract);
+    mat_special_nucs =
+        cyclus::Material::CreateUntracked(q_to_switch, c_special_nucs);
 
-  cyclus::Material::Ptr equiv_mat =
-      mat->ExtractComp(q_to_switch, c_special_nucs);
+    equiv_mat = mat->ExtractComp(q_to_switch, c_special_nucs);
 
-  cyclus::CompMap to_add;
-  to_add[922380000] = q_to_switch;
-  cyclus::Composition::Ptr c_to_add =
-      cyclus::Composition::CreateFromMass(to_add);
-  equiv_mat->Absorb(cyclus::Material::CreateUntracked(q_to_switch, c_to_add));
+    cyclus::CompMap to_add;
+    to_add[922380000] = q_to_switch;
+    cyclus::Composition::Ptr c_to_add =
+        cyclus::Composition::CreateFromMass(to_add);
+    equiv_mat->Absorb(cyclus::Material::CreateUntracked(q_to_switch, c_to_add));
+  } else {
+    return std::pair<cyclus::Material::Ptr, cyclus::Material::Ptr>(
+        equiv_mat, mat_special_nucs);
+  }
 
   if (equiv_mat->quantity() != mat->quantity()) {
     std::cout << "Oupsy !!" << std::endl;
