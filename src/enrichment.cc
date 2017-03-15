@@ -34,7 +34,6 @@ std::pair<cyclus::Material::Ptr, cyclus::Material::Ptr> equivalent_u8(
         cyclus::Composition::CreateFromMass(to_substract);
     mat_special_nucs =
         cyclus::Material::CreateUntracked(q_to_switch, c_special_nucs);
-
     equiv_mat->ExtractComp(q_to_switch, c_special_nucs);
 
     cyclus::CompMap to_add;
@@ -50,7 +49,7 @@ std::pair<cyclus::Material::Ptr, cyclus::Material::Ptr> equivalent_u8(
   if (equiv_mat->quantity() != mat->quantity()) {
     std::cout << "Oupsy !!" << std::endl;
   }
-
+  
   // return a pair containing the equivalent material replacing all special
   // nucs but U-238, and the replaced material containing the special nucs.
   return std::pair<cyclus::Material::Ptr, cyclus::Material::Ptr>(
@@ -341,15 +340,29 @@ void Enrichment::AddMat_(cyclus::Material::Ptr mat) {
   cyclus::CompMap cm = mat->comp()->atom();
   bool extra_u = false;
   bool other_elem = false;
+  bool special_nuc = false;
   for (cyclus::CompMap::const_iterator it = cm.begin(); it != cm.end(); ++it) {
+    bool extra_u_ = false;
+    bool other_elem_ = false;
     if (pyne::nucname::znum(it->first) == 92) {
       if (pyne::nucname::anum(it->first) != 235 &&
           pyne::nucname::anum(it->first) != 238 && it->second > 0) {
-        extra_u = true;
+        extra_u_ = true;
       }
     } else if (it->second > 0) {
-      other_elem = true;
+      other_elem_ = true;
     }
+
+    std::map<cyclus::Nuc, double>::const_iterator it2;
+    for( it2 = ux.begin(); it2 != ux.end(); it2++ ){
+      if(it2->first == it->first){
+        extra_u_ = false;
+        other_elem_ = false;
+        special_nuc = true;
+      }
+    }
+    extra_u |= extra_u_;
+    other_elem |= other_elem_;
   }
   if (extra_u) {
     cyclus::Warn<cyclus::VALUE_WARNING>(
@@ -360,6 +373,10 @@ void Enrichment::AddMat_(cyclus::Material::Ptr mat) {
     cyclus::Warn<cyclus::VALUE_WARNING>(
         "Non-uranium elements are "
         "sent directly to tails.");
+  }
+  if (special_nuc) {
+    cyclus::Warn<cyclus::VALUE_WARNING>(
+        "Some elements requiring a special treatment have been detected.");
   }
 
   LOG(cyclus::LEV_INFO5, "EnrFac") << prototype() << " is initially holding "
@@ -421,10 +438,10 @@ cyclus::Material::Ptr Enrichment::Enrich_(cyclus::Material::Ptr mat,
 
   std::pair<Material::Ptr, Material::Ptr> flip_mat =
       equivalent_u8(natu_matl, ux);
-  Material::Ptr natu_matl_bkp = natu_matl;
-  natu_matl = flip_mat.first;
+  
+  cyclus::Material::Ptr equiv_natu_mat = flip_mat.first;
 
-  cyclus::toolkit::MatQuery mq(natu_matl);
+  cyclus::toolkit::MatQuery mq(equiv_natu_mat);
   std::set<cyclus::Nuc> nucs;
   nucs.insert(922350000);
   nucs.insert(922380000);
@@ -461,16 +478,19 @@ cyclus::Material::Ptr Enrichment::Enrich_(cyclus::Material::Ptr mat,
   intra_timestep_feed_ += feed_req;
   RecordEnrichment_(feed_req, swu_req);
 
+  // Re-Add the special nuc inside the product, and fix tails amount accordingly
+
   double prod_mass = response->quantity();
   double u5_raw_enrich = UraniumAssay(response);
 
+  
   std::map<cyclus::Nuc, double>::iterator it;
   for (it = ux.begin(); it != ux.end(); it++) {
     double nuc_i_enrich_factor =
         u5_raw_enrich / UraniumAssay(flip_mat.first) * it->second;
 
-    cyclus::toolkit::MatQuery mq(natu_matl);
-    double nuc_i_feed_enrich = mq.mass(it->first) / natu_matl->quantity();
+    cyclus::toolkit::MatQuery mq_(natu_matl);
+    double nuc_i_feed_enrich = mq_.mass(it->first) / natu_matl->quantity();
     double nuc_i_prod_enrich = nuc_i_feed_enrich * nuc_i_enrich_factor;
 
     double nuc_i_prod_mass = nuc_i_prod_enrich * prod_mass;
