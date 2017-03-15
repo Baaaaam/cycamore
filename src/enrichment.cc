@@ -14,7 +14,8 @@ namespace cycamore {
 std::pair<cyclus::Material::Ptr, cyclus::Material::Ptr> equivalent_u8(
     cyclus::Material::Ptr mat, std::map<cyclus::Nuc, double> ux) {
   double initial_q = mat->quantity();
-  cyclus::Material::Ptr equiv_mat = mat;
+  cyclus::Material::Ptr equiv_mat =
+      cyclus::Material::CreateUntracked(mat->quantity(), mat->comp());
   cyclus::Material::Ptr mat_special_nucs;
 
   cyclus::CompMap to_substract;
@@ -25,7 +26,6 @@ std::pair<cyclus::Material::Ptr, cyclus::Material::Ptr> equivalent_u8(
   for (it = ux.begin(); it != ux.end(); it++) {
     cyclus::toolkit::MatQuery mq(mat);
     double nuc_i_mass = mq.mass(it->first);
-
     q_to_switch += nuc_i_mass;
     to_substract[it->first] = nuc_i_mass;
   }
@@ -35,7 +35,7 @@ std::pair<cyclus::Material::Ptr, cyclus::Material::Ptr> equivalent_u8(
     mat_special_nucs =
         cyclus::Material::CreateUntracked(q_to_switch, c_special_nucs);
 
-    equiv_mat = mat->ExtractComp(q_to_switch, c_special_nucs);
+    equiv_mat->ExtractComp(q_to_switch, c_special_nucs);
 
     cyclus::CompMap to_add;
     to_add[922380000] = q_to_switch;
@@ -56,7 +56,6 @@ std::pair<cyclus::Material::Ptr, cyclus::Material::Ptr> equivalent_u8(
   return std::pair<cyclus::Material::Ptr, cyclus::Material::Ptr>(
       equiv_mat, mat_special_nucs);
 };
-
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 Enrichment::Enrichment(cyclus::Context* ctx)
@@ -266,7 +265,8 @@ std::set<cyclus::BidPortfolio<cyclus::Material>::Ptr> Enrichment::GetMatlBids(
     }
 
     Converter<Material>::Ptr sc(new SWUConverter(FeedAssay(), tails_assay, ux));
-    Converter<Material>::Ptr nc(new NatUConverter(FeedAssay(), tails_assay, ux));
+    Converter<Material>::Ptr nc(
+        new NatUConverter(FeedAssay(), tails_assay, ux));
     CapacityConstraint<Material> swu(swu_capacity, sc);
     CapacityConstraint<Material> natu(inventory.quantity(), nc);
     commod_port->AddConstraint(swu);
@@ -465,7 +465,7 @@ cyclus::Material::Ptr Enrichment::Enrich_(cyclus::Material::Ptr mat,
   double u5_raw_enrich = UraniumAssay(response);
 
   std::map<cyclus::Nuc, double>::iterator it;
-  for ( it = ux.begin(); it != ux.end(); it++) {
+  for (it = ux.begin(); it != ux.end(); it++) {
     double nuc_i_enrich_factor =
         u5_raw_enrich / UraniumAssay(flip_mat.first) * it->second;
 
@@ -481,14 +481,15 @@ cyclus::Material::Ptr Enrichment::Enrich_(cyclus::Material::Ptr mat,
     nuc_to_add[it->first] = nuc_i_prod_mass;
     response->Absorb(cyclus::Material::CreateUntracked(
         nuc_i_prod_mass, cyclus::Composition::CreateFromMass(nuc_to_add)));
-    r->ExtractComp(nuc_i_prod_mass, cyclus::Composition::CreateFromMass(nuc_to_add));
+    r->ExtractComp(nuc_i_prod_mass,
+                   cyclus::Composition::CreateFromMass(nuc_to_add));
 
     cyclus::CompMap u8_to_remove;
     u8_to_remove[922380000] = nuc_i_prod_mass;
     r->Absorb(cyclus::Material::CreateUntracked(
         nuc_i_prod_mass, cyclus::Composition::CreateFromMass(u8_to_remove)));
     response->ExtractComp(nuc_i_prod_mass,
-                     cyclus::Composition::CreateFromMass(u8_to_remove));
+                          cyclus::Composition::CreateFromMass(u8_to_remove));
   }
 
   tails.Push(r);
