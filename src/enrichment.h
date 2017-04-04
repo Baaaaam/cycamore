@@ -67,7 +67,7 @@ class NatUConverter : public cyclus::Converter<cyclus::Material> {
     nucs.insert(922350000);
     nucs.insert(922380000);
 
-    double natu_frac = mq.mass_frac(nucs);
+    double natu_frac = mq.atom_frac(nucs);
     double natu_req = cyclus::toolkit::FeedQty(m->quantity(), assays);
     return natu_req / natu_frac;
   }
