@@ -361,7 +361,6 @@ cyclus::Material::Ptr Enrichment::Enrich_(cyclus::Material::Ptr mat,
   Assays assays(FeedAssay(), UraniumAssay(mat), tails_assay);
   double swu_req = SwuRequired(qty, assays);
   double natu_req = FeedQty(qty, assays);
-  std::cout << "FeedAssay: " <<  FeedAssay() << " ,ProductAssay: " << UraniumAssay(mat) << " ,tails_assay: "<< tails_assay << std::endl;
 
   // Determine the composition of the natural uranium
   // (ie. U-235+U-238/TotalMass)
@@ -376,8 +375,6 @@ cyclus::Material::Ptr Enrichment::Enrich_(cyclus::Material::Ptr mat,
   double natu_frac = mq.mass_frac(nucs);
   double feed_req = natu_req / natu_frac;
 
-  std::cout << "natu_frac: " << natu_frac << std::endl;
-  std::cout << "feed_req: " << feed_req << std::endl;
 
   // pop amount from inventory and blob it into one material
   Material::Ptr r;
@@ -402,8 +399,6 @@ cyclus::Material::Ptr Enrichment::Enrich_(cyclus::Material::Ptr mat,
   // blob
   cyclus::Composition::Ptr comp = mat->comp();
   Material::Ptr response = r->ExtractComp(qty, comp);
-  std::cout << "prod_assay " << UraniumAssay(response) << std::endl;
-  std::cout << "tail_assay " << UraniumAssay(r) << std::endl;
   tails.Push(r);
 
   current_swu_capacity -= swu_req;
