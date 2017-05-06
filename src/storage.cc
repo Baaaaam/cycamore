@@ -124,6 +124,8 @@ void Storage::Tick() {
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void Storage::Tock() {
+  
+    std::cout << " in sstor tock" << std::endl;
   LOG(cyclus::LEV_INFO3, "ComCnv") << prototype() << " is tocking {";
 
   BeginProcessing_();  // place unprocessed inventory into processing
@@ -135,6 +137,7 @@ void Storage::Tock() {
   ProcessMat_(throughput);  // place ready into stocks
 
   LOG(cyclus::LEV_INFO3, "ComCnv") << "}";
+    std::cout << " out sstor tock" << std::endl;
 }
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

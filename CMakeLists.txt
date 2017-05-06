@@ -115,13 +115,22 @@ IF(NOT CYCLUS_DOC_ONLY)
     SET(CYCAMORE_INCLUDE_DIRS ${CYCAMORE_INCLUDE_DIRS} ${Boost_INCLUDE_DIR})
     SET(LIBS ${LIBS} ${Boost_FILESYSTEM_LIBRARY})
     SET(LIBS ${LIBS} ${Boost_SYSTEM_LIBRARY})
+      #added for OpenMP on Linux
+      FIND_PACKAGE(OpenMP)
+      IF(OPENMP_FOUND)
+        SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+        MESSAGE(STATUS "Found OpenMP")
+      ELSE()
+        MESSAGE(WARNING "OpenMP was requested but support was not found")
+      ENDIF()
 
     # find lapack and link to it
     # note there is no include directory variable:
     # http://www.cmake.org/cmake/help/v3.0/module/FindLAPACK.html
-    FIND_PACKAGE(LAPACK REQUIRED)
-    set(LIBS ${LIBS} ${LAPACK_LIBRARIES})
-    MESSAGE("\tFound LAPACK Libraries: ${LAPACK_LIBRARIES}")
+    #FIND_PACKAGE(LAPACK REQUIRED)
+    #set(LIBS ${LIBS} ${LAPACK_LIBRARIES})
+    #MESSAGE("\tFound LAPACK Libraries: ${LAPACK_LIBRARIES}")
 
     # Find HDF5
     FIND_PACKAGE(HDF5 REQUIRED)

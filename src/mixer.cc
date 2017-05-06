@@ -96,15 +96,19 @@ void Mixer::EnterNotify() {
 }
 
 void Mixer::Tick() {
+    std::cout << " in mixer tick" << std::endl;
   if (constrain_request == 1 ) {
     double tgt_qty = streambufs["in_stream_0"].quantity() /  mixing_ratios[0];
     if (tgt_qty >= throughput) {
       request_other_buffer = true;
     }
   }
+    std::cout << " out mixer tick" << std::endl;
 }
 
 void Mixer::Tock() {
+ 
+    std::cout << " in mixer tock" << std::endl;
   if (output.quantity() < output.capacity()) {
     double tgt_qty = output.space();
 
@@ -136,6 +140,7 @@ void Mixer::Tock() {
   if (constrain_request == 1 && request_other_buffer) {
     request_other_buffer = false;
   }
+    std::cout << " out mixer tock" << std::endl;
 }
 
 std::set<cyclus::RequestPortfolio<cyclus::Material>::Ptr>

@@ -98,7 +98,9 @@ void Separations::EnterNotify() {
 }
 
 void Separations::Tick() {
+    std::cout << " in sep tick" << std::endl;
   if (feed.count() == 0) {
+    std::cout << " short out sep tick" << std::endl;
     return;
   }
   double pop_qty = std::min(throughput, feed.quantity());
@@ -141,6 +143,7 @@ void Separations::Tick() {
       leftover.Push(mat);
     }
   }
+    std::cout << " out sep tick" << std::endl;
 }
 
 // Note that this returns an untracked material that should just be used for

@@ -340,18 +340,17 @@ void Reactor::Tock() {
     discharged = false;
     cycle_step = 0;
   }
+    if (cycle_step == 0 && core.count() == n_assem_core) {
+      Record("CYCLE_START", "");
+    }
 
-  if (cycle_step == 0 && core.count() == n_assem_core) {
-    Record("CYCLE_START", "");
-  }
-
-  if (cycle_step >= 0 && cycle_step < cycle_time &&
-      core.count() == n_assem_core) {
-    cyclus::toolkit::RecordTimeSeries<cyclus::toolkit::POWER>(this, power_cap);
-  } else {
-    cyclus::toolkit::RecordTimeSeries<cyclus::toolkit::POWER>(this, 0);
-  }
-
+    if (cycle_step >= 0 && cycle_step < cycle_time &&
+        core.count() == n_assem_core) {
+      cyclus::toolkit::RecordTimeSeries<cyclus::toolkit::POWER>(this,
+                                                                power_cap);
+    } else {
+      cyclus::toolkit::RecordTimeSeries<cyclus::toolkit::POWER>(this, 0);
+    }
   // "if" prevents starting cycle after initial deployment until core is full
   // even though cycle_step is its initial zero.
   if (cycle_step > 0 || core.count() == n_assem_core) {
@@ -494,14 +493,18 @@ void Reactor::PushSpent(std::map<std::string, MatVec> leftover) {
 }
 
 void Reactor::Record(std::string name, std::string val) {
-  context()
-      ->NewDatum("ReactorEvents")
-      ->AddVal("AgentId", id())
-      ->AddVal("Time", context()->time())
-      ->AddVal("Event", name)
-      ->AddVal("Value", val)
-      ->Record();
+#pragma omp critical(record)
+  {
+    context()
+        ->NewDatum("ReactorEvents")
+        ->AddVal("AgentId", id())
+        ->AddVal("Time", context()->time())
+        ->AddVal("Event", name)
+        ->AddVal("Value", val)
+        ->Record();
+  }
 }
+
 
 extern "C" cyclus::Agent* ConstructReactor(cyclus::Context* ctx) {
   return new Reactor(ctx);
