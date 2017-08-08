@@ -53,7 +53,7 @@ void Reactor::InitFrom(cyclus::QueryableBackend* b) {
 
 void Reactor::EnterNotify() {
   cyclus::Facility::EnterNotify();
-
+  running = true;
   // If the user ommitted fuel_prefs, we set it to zeros for each fuel
   // type.  Without this segfaults could occur - yuck.
   if (fuel_prefs.size() == 0) {
@@ -353,8 +353,10 @@ void Reactor::Tock() {
 
   // "if" prevents starting cycle after initial deployment until core is full
   // even though cycle_step is its initial zero.
-  if (cycle_step > 0 || core.count() == n_assem_core) {
-    cycle_step++;
+  if (running) {
+    if (cycle_step > 0 || core.count() == n_assem_core) {
+      cycle_step++;
+    }
   }
 }
 

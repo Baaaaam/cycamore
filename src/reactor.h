@@ -129,6 +129,8 @@ class Reactor : public cyclus::Facility,
       const std::vector<cyclus::Trade<cyclus::Material> >& trades,
       std::vector<std::pair<cyclus::Trade<cyclus::Material>,
                             cyclus::Material::Ptr> >& responses);
+  void Running(bool val) {running = val;}
+  bool CanRun() { return  core.count() == n_assem_core ? true : false;}
 
   #pragma cyclus decl
 
@@ -138,6 +140,7 @@ class Reactor : public cyclus::Facility,
   std::string fuel_inrecipe(cyclus::Material::Ptr m);
   std::string fuel_outrecipe(cyclus::Material::Ptr m);
   double fuel_pref(cyclus::Material::Ptr m);
+  bool running;
 
   bool retired() {
     return exit_time() != -1 && context()->time() >= exit_time();
