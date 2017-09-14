@@ -202,6 +202,11 @@ class Separations
   }
   std::map<std::string, std::pair<double, std::map<int, double> > > streams_;
 
+  #pragma cyclus var {							\
+    "default": 0.00, "tooltip": "Efficiency error",				\
+    "uilabel": "Efficiency Error",                             \
+  }
+  double efficiency_uncertainty;
   // custom SnapshotInv and InitInv and EnterNotify are used to persist this
   // state var.
   std::map<std::string, cyclus::toolkit::ResBuf<cyclus::Material> > streambufs;
