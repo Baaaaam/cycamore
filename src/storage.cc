@@ -1,6 +1,8 @@
 // storage.cc
 // Implements the Storage class
 #include "storage.h"
+#include <random>
+
 
 namespace storage {
 
@@ -139,6 +141,17 @@ void Storage::Tock() {
   ProcessMat_(throughput);  // place ready into stocks
 
   LOG(cyclus::LEV_INFO3, "ComCnv") << "}";
+}
+
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+int Storage::ready_time() {
+  if (residence_time_uncertainty == 0) {
+    return context()->time() - residence_time;
+  } else {
+    std::default_random_engine de(time(0));
+    std::normal_distribution<int> nd(residence_time, residence_time_uncertainty);
+    return context()->time() - nd(de);
+  }
 }
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

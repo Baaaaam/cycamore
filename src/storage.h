@@ -123,7 +123,7 @@ class Storage
     return (max_inv_size - processing.quantity() - stocks.quantity()); }
 
   /// @brief returns the time key for ready materials
-  int ready_time(){ return context()->time() - residence_time; }
+  int ready_time();
 
   /* --- Module Members --- */
 
@@ -163,6 +163,13 @@ class Storage
                       "uitype": "range", \
                       "range": [0, 12000]}
   int residence_time;
+
+  #pragma cyclus var {"default": 0,\
+                      "tooltip":"error in residence time (timesteps)",\
+                      "units":"time steps",\
+                      "uilabel":"Residence Time Error"}
+  int residence_time_uncertainty;
+
 
   #pragma cyclus var {"default": 1e299,\
                      "tooltip":"throughput per timestep (kg)",\
