@@ -6,6 +6,7 @@
 #include <limits>
 #include <sstream>
 #include <vector>
+#include <random>
 
 #include <boost/lexical_cast.hpp>
 
@@ -220,6 +221,15 @@ std::set<cyclus::BidPortfolio<cyclus::Material>::Ptr> Enrichment::GetMatlBids(
         Material::Ptr offer = Offer_(req->target());
         commod_port->AddBid(req, offer, this);
       }
+    }
+
+    double variable_tails_assay = tails_assay;
+    if (tails_assay_uncertainty != 0){
+    
+      std::default_random_engine de(time(0));
+      std::normal_distribution<int> nd(tails_assay, tails_assay_uncertainty);
+      variable_tails_assay = nd(de);
+    
     }
 
     Converter<Material>::Ptr sc(new SWUConverter(FeedAssay(), tails_assay));
