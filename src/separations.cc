@@ -1,4 +1,5 @@
 #include "separations.h"
+#include <random>
 
 using cyclus::Material;
 using cyclus::Composition;
@@ -116,7 +117,15 @@ void Separations::Tick() {
   for (it = streams_.begin(); it != streams_.end(); ++it) {
     Stream info = it->second;
     std::string name = it->first;
-    stagedsep[name] = SepMaterial(info.second, mat);
+    std::map<int, double> eff_table = info.second;
+
+    if (efficiency_uncertainty != 0 ){
+      std::map<int, double>::iterator it2;
+      for (it2 = eff_table.begin(); it2 !=eff_table.end(); ++it2) {
+          it2->second = get_efficiency_corrected(it2->second);
+      }
+    }
+    stagedsep[name] = SepMaterial(eff_table, mat);
     double frac = streambufs[name].space() / stagedsep[name]->quantity();
     if (frac < maxfrac) {
       maxfrac = frac;
@@ -359,6 +368,18 @@ void Separations::RecordPosition() {
       ->AddVal("Longitude", longitude)
       ->Record();
 }
+
+double Separations::get_efficiency_corrected(double eff) {
+  if (efficiency_uncertainty == 0) {
+    return eff;
+  } else {
+      std::default_random_engine de(time(0));
+      std::normal_distribution<int> nd(eff, efficiency_uncertainty);
+      return nd(de);
+  }
+}
+
+
 
 extern "C" cyclus::Agent* ConstructSeparations(cyclus::Context* ctx) {
   return new Separations(ctx);
