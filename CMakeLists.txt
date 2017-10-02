@@ -88,19 +88,17 @@ IF(NOT CYCLUS_DOC_ONLY)
     MESSAGE("--CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}")
 
     # get dependency hints
-    if (NOT DEPS_ROOT_DIR)
-        get_filename_component(compdir ${CMAKE_CXX_COMPILER} DIRECTORY)
-        get_filename_component(DEPS_ROOT_DIR ${compdir} DIRECTORY)
-    endif (NOT DEPS_ROOT_DIR)
-    SET(DEPS_HINTS HINTS "${DEPS_ROOT_DIR}")
-    SET(DEPS_BIN_HINTS ${DEPS_HINTS} "${DEPS_ROOT_DIR}/bin")
-    SET(DEPS_LIB_HINTS ${DEPS_HINTS} "${DEPS_ROOT_DIR}/lib")
-    SET(DEPS_INCLUDE_HINTS HINTS "${DEPS_ROOT_DIR}/include")
-    MESSAGE("-- Dependency Root Dir (DEPS_ROOT_DIR): ${DEPS_ROOT_DIR}")
-    MESSAGE("-- Dependency Hints (DEPS_HINTS): ${DEPS_HINTS}")
-    MESSAGE("-- Dependency Binary Hints (DEPS_BIN_HINTS): ${DEPS_BIN_HINTS}")
-    MESSAGE("-- Dependency Library Hints (DEPS_LIB_HINTS): ${DEPS_LIB_HINTS}")
-    MESSAGE("-- Dependency Include Hints (DEPS_INCLUDE_HINTS): ${DEPS_INCLUDE_HINTS}")
+    if (DEPS_ROOT_DIR)
+        SET(DEPS_HINTS HINTS "${DEPS_ROOT_DIR}")
+        SET(DEPS_BIN_HINTS ${DEPS_HINTS} "${DEPS_ROOT_DIR}/bin")
+        SET(DEPS_LIB_HINTS ${DEPS_HINTS} "${DEPS_ROOT_DIR}/lib")
+        SET(DEPS_INCLUDE_HINTS HINTS "${DEPS_ROOT_DIR}/include")
+    else (DEPS_ROOT_DIR)
+        SET(DEPS_HINTS)
+        SET(DEPS_bin_HINTS)
+        SET(DEPS_LIB_HINTS)
+        SET(DEPS_INCLUDE_HINTS)
+    endif (DEPS_ROOT_DIR)
 
     # Find cyclus
     FIND_PACKAGE(Cyclus REQUIRED)
@@ -113,6 +111,12 @@ IF(NOT CYCLUS_DOC_ONLY)
 
     # Include macros installed with cyclus core
     INCLUDE(UseCyclus)
+
+
+
+     FIND_PACKAGE(LibXml2 REQUIRED)
+     ADD_DEFINITIONS(${LIBXML2_DEFINITIONS})
+     SET(LIBS ${LIBS} ${LIBXML2_LIBRARIES})
 
     # Find LibXML++ and dependencies
     FIND_PACKAGE(LibXML++ REQUIRED)
@@ -154,14 +158,17 @@ IF(NOT CYCLUS_DOC_ONLY)
     MESSAGE("\tFound LAPACK Libraries: ${LAPACK_LIBRARIES}")
 
     # Find HDF5
-    FIND_PACKAGE(HDF5 REQUIRED COMPONENTS HL)
+        # Find HDF5
+    FIND_PACKAGE(HDF5 REQUIRED COMPONENTS)
     ADD_DEFINITIONS(${HDF5_DEFINITIONS})
     set(LIBS ${LIBS} ${HDF5_C_LIBRARIES} ${HDF5_C_HL_LIBRARIES})
+    set(LIBS ${LIBS} ${HDF5_LIBRARIES})
     MESSAGE("--    HDF5 Root: ${HDF5_ROOT}")
     MESSAGE("--    HDF5 Include directory: ${HDF5_INCLUDE_DIR}")
     MESSAGE("--    HDF5 Library directories: ${HDF5_LIBRARY_DIRS}")
     MESSAGE("--    HDF5 Libraries: ${HDF5_C_LIBRARIES}")
     MESSAGE("--    HDF5 High Level Libraries: ${HDF5_C_HL_LIBRARIES}")
+    
 
     # find coin and link to it
     FIND_PACKAGE(COIN REQUIRED)
