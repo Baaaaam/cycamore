@@ -1,5 +1,6 @@
 #include "separations.h"
 #include <random>
+#include <time.h>
 
 using cyclus::Material;
 using cyclus::Composition;
@@ -123,6 +124,7 @@ void Separations::Tick() {
       std::map<int, double>::iterator it2;
       for (it2 = eff_table.begin(); it2 !=eff_table.end(); ++it2) {
           it2->second = get_efficiency_corrected(it2->second);
+          std::cout << it2->second << std::endl;
       }
     }
     stagedsep[name] = SepMaterial(eff_table, mat);
@@ -373,9 +375,14 @@ double Separations::get_efficiency_corrected(double eff) {
   if (efficiency_uncertainty == 0) {
     return eff;
   } else {
-      std::default_random_engine de(time(0));
-      std::normal_distribution<int> nd(eff, efficiency_uncertainty);
-      return nd(de);
+      std::default_random_engine de(std::clock());
+      std::normal_distribution<double> nd(eff, efficiency_uncertainty);
+      
+      double val = nd(de);
+      if (val > 1){
+        return 1;
+      }
+      return val;
   }
 }
 
