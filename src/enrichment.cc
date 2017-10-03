@@ -6,7 +6,7 @@
 #include <limits>
 #include <sstream>
 #include <vector>
-#include <random>
+#include <time.h>
 
 #include <boost/lexical_cast.hpp>
 
@@ -207,6 +207,15 @@ std::set<cyclus::BidPortfolio<cyclus::Material>::Ptr> Enrichment::GetMatlBids(
 
   if ((out_requests.count(product_commod) > 0) && (inventory.quantity() > 0)) {
     BidPortfolio<Material>::Ptr commod_port(new BidPortfolio<Material>());
+    
+    double variable_tails_assay = tails_assay;
+    if (tails_assay_uncertainty != 0){
+    
+      std::default_random_engine de(std::clock());
+      std::normal_distribution<double> nd(tails_assay, tails_assay_uncertainty);
+      variable_tails_assay = nd(de);
+      std::cout<< variable_tails_assay << std::endl; 
+    }
 
     std::vector<Request<Material>*>& commod_requests =
         out_requests[product_commod];
@@ -219,26 +228,20 @@ std::set<cyclus::BidPortfolio<cyclus::Material>::Ptr> Enrichment::GetMatlBids(
           ((request_enrich < max_enrich) ||
            (cyclus::AlmostEq(request_enrich, max_enrich)))) {
         Material::Ptr offer = Offer_(req->target());
+        reccord_tail_assay[req] = variable_tails_assay;
         commod_port->AddBid(req, offer, this);
       }
     }
 
-    double variable_tails_assay = tails_assay;
-    if (tails_assay_uncertainty != 0){
     
-      std::default_random_engine de(time(0));
-      std::normal_distribution<int> nd(tails_assay, tails_assay_uncertainty);
-      variable_tails_assay = nd(de);
-    
-    }
-
-    Converter<Material>::Ptr sc(new SWUConverter(FeedAssay(), tails_assay));
-    Converter<Material>::Ptr nc(new NatUConverter(FeedAssay(), tails_assay));
+    Converter<Material>::Ptr sc(new SWUConverter(FeedAssay(), variable_tails_assay));
+    Converter<Material>::Ptr nc(new NatUConverter(FeedAssay(), variable_tails_assay));
     CapacityConstraint<Material> swu(swu_capacity, sc);
     CapacityConstraint<Material> natu(inventory.quantity(), nc);
     commod_port->AddConstraint(swu);
     commod_port->AddConstraint(natu);
 
+    
     LOG(cyclus::LEV_INFO5, "EnrFac")
         << prototype() << " adding a swu constraint of " << swu.capacity();
     LOG(cyclus::LEV_INFO5, "EnrFac")
@@ -285,7 +288,8 @@ void Enrichment::GetMatlTrades(
       LOG(cyclus::LEV_INFO5, "EnrFac")
           << prototype() << " just received an order"
           << " for " << it->amt << " of " << product_commod;
-      response = Enrich_(it->bid->offer(), qty);
+      double var_tail_assay = reccord_tail_assay[it->bid->request()];
+      response = Enrich_(it->bid->offer(), qty, var_tail_assay);
     }
     responses.push_back(std::make_pair(*it, response));
   }
@@ -362,7 +366,7 @@ cyclus::Material::Ptr Enrichment::Offer_(cyclus::Material::Ptr mat) {
 }
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 cyclus::Material::Ptr Enrichment::Enrich_(cyclus::Material::Ptr mat,
-                                          double qty) {
+                                          double qty, double var_assay) {
   using cyclus::Material;
   using cyclus::ResCast;
   using cyclus::toolkit::Assays;
@@ -371,8 +375,12 @@ cyclus::Material::Ptr Enrichment::Enrich_(cyclus::Material::Ptr mat,
   using cyclus::toolkit::FeedQty;
   using cyclus::toolkit::TailsQty;
 
+  if (var_assay == -1){
+    var_assay = tails_assay;
+  }
+
   // get enrichment parameters
-  Assays assays(FeedAssay(), UraniumAssayMass(mat), tails_assay);
+  Assays assays(FeedAssay(), UraniumAssayMass(mat), var_assay);
   double swu_req = SwuRequired(qty, assays);
   double natu_req = FeedQty(qty, assays);
 
@@ -399,7 +407,7 @@ cyclus::Material::Ptr Enrichment::Enrich_(cyclus::Material::Ptr mat,
       r = inventory.Pop(feed_req, cyclus::eps_rsrc());
     }
   } catch (cyclus::Error& e) {
-    NatUConverter nc(FeedAssay(), tails_assay);
+    NatUConverter nc(FeedAssay(), var_assay);
     std::stringstream ss;
     ss << " tried to remove " << feed_req << " from its inventory of size "
        << inventory.quantity()
