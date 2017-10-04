@@ -124,7 +124,6 @@ void Separations::Tick() {
       std::map<int, double>::iterator it2;
       for (it2 = eff_table.begin(); it2 !=eff_table.end(); ++it2) {
           it2->second = get_efficiency_corrected(it2->second);
-          std::cout << it2->second << std::endl;
       }
     }
     stagedsep[name] = SepMaterial(eff_table, mat);

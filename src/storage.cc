@@ -2,7 +2,7 @@
 // Implements the Storage class
 #include "storage.h"
 #include <random>
-
+#include <time.h>
 
 namespace storage {
 
@@ -148,9 +148,11 @@ int Storage::ready_time() {
   if (residence_time_uncertainty == 0) {
     return context()->time() - residence_time;
   } else {
-    std::default_random_engine de(time(0));
-    std::normal_distribution<int> nd(residence_time, residence_time_uncertainty);
-    return context()->time() - nd(de);
+    std::default_random_engine de(std::clock());
+    std::normal_distribution<double> nd(residence_time, residence_time_uncertainty);
+    double var_residence = nd(de);
+    int ready_time = context()->time() - (int)var_residence;
+    return ready_time;
   }
 }
 

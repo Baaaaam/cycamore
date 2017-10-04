@@ -214,7 +214,6 @@ std::set<cyclus::BidPortfolio<cyclus::Material>::Ptr> Enrichment::GetMatlBids(
       std::default_random_engine de(std::clock());
       std::normal_distribution<double> nd(tails_assay, tails_assay_uncertainty);
       variable_tails_assay = nd(de);
-      std::cout<< variable_tails_assay << std::endl; 
     }
 
     std::vector<Request<Material>*>& commod_requests =
