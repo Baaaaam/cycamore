@@ -105,7 +105,8 @@ class Separations
 
 
   private:
-  double get_efficiency_corrected(double efficiency);
+  template<typename T> 
+  T get_corrected_param(T param, T uncertainty); 
 
   #pragma cyclus var { \
     "doc": "Ordered list of commodities on which to request feed material to " \

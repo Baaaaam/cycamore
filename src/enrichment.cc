@@ -208,12 +208,9 @@ std::set<cyclus::BidPortfolio<cyclus::Material>::Ptr> Enrichment::GetMatlBids(
   if ((out_requests.count(product_commod) > 0) && (inventory.quantity() > 0)) {
     BidPortfolio<Material>::Ptr commod_port(new BidPortfolio<Material>());
     
-    double variable_tails_assay = tails_assay;
+    double corrected_tails_assay = tails_assay;
     if (tails_assay_uncertainty != 0){
-    
-      std::default_random_engine de(std::clock());
-      std::normal_distribution<double> nd(tails_assay, tails_assay_uncertainty);
-      variable_tails_assay = nd(de);
+      corrected_tails_assay = get_corrected_param<double>(tails_assay, tails_assay_uncertainty);
     }
 
     std::vector<Request<Material>*>& commod_requests =
@@ -227,14 +224,14 @@ std::set<cyclus::BidPortfolio<cyclus::Material>::Ptr> Enrichment::GetMatlBids(
           ((request_enrich < max_enrich) ||
            (cyclus::AlmostEq(request_enrich, max_enrich)))) {
         Material::Ptr offer = Offer_(req->target());
-        reccord_tail_assay[req] = variable_tails_assay;
+        reccord_tail_assay[req] = corrected_tails_assay;
         commod_port->AddBid(req, offer, this);
       }
     }
 
     
-    Converter<Material>::Ptr sc(new SWUConverter(FeedAssay(), variable_tails_assay));
-    Converter<Material>::Ptr nc(new NatUConverter(FeedAssay(), variable_tails_assay));
+    Converter<Material>::Ptr sc(new SWUConverter(FeedAssay(), corrected_tails_assay));
+    Converter<Material>::Ptr nc(new NatUConverter(FeedAssay(), corrected_tails_assay));
     CapacityConstraint<Material> swu(swu_capacity, sc);
     CapacityConstraint<Material> natu(inventory.quantity(), nc);
     commod_port->AddConstraint(swu);
@@ -478,6 +475,18 @@ double Enrichment::FeedAssay() {
   return cyclus::toolkit::UraniumAssayMass(fission_matl);
 }
 
+template<typename T> 
+T Enrichment::get_corrected_param(T param, T param_uncertainty) {
+  if (param_uncertainty == 0) {
+    return param;
+  } else {
+      std::default_random_engine de(std::clock());
+      std::normal_distribution<double> nd(param, param*param_uncertainty);
+
+      double val = std::round(nd(de));
+      return (T)val;
+  }
+}
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void Enrichment::RecordPosition() {
   std::string specification = this->spec();

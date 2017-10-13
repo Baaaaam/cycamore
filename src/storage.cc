@@ -148,9 +148,7 @@ int Storage::ready_time() {
   if (residence_time_uncertainty == 0) {
     return context()->time() - residence_time;
   } else {
-    std::default_random_engine de(std::clock());
-    std::normal_distribution<double> nd(residence_time, residence_time_uncertainty);
-    double var_residence = nd(de);
+    double var_residence = get_corrected_param<double>(residence_time, residence_time_uncertainty);
     int ready_time = context()->time() - (int)var_residence;
     return ready_time;
   }
@@ -254,6 +252,18 @@ void Storage::RecordPosition() {
 }
 
 
+template<typename T> 
+T Storage::get_corrected_param(T param, T param_uncertainty) {
+  if (param_uncertainty == 0) {
+    return param;
+  } else {
+      std::default_random_engine de(std::clock());
+      std::normal_distribution<double> nd(param, param*param_uncertainty);
+
+      double val = std::round(nd(de));
+      return (T)val;
+  }
+}
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 extern "C" cyclus::Agent* ConstructStorage(cyclus::Context* ctx) {
   return new Storage(ctx);

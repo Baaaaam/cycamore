@@ -123,7 +123,7 @@ void Separations::Tick() {
     if (efficiency_uncertainty != 0 ){
       std::map<int, double>::iterator it2;
       for (it2 = eff_table.begin(); it2 !=eff_table.end(); ++it2) {
-          it2->second = get_efficiency_corrected(it2->second);
+          it2->second = get_corrected_param<double>(it2->second, efficiency_uncertainty);
       }
     }
     stagedsep[name] = SepMaterial(eff_table, mat);
@@ -373,15 +373,19 @@ void Separations::RecordPosition() {
 double Separations::get_efficiency_corrected(double eff) {
   if (efficiency_uncertainty == 0) {
     return eff;
+  }
+}
+    
+template<typename T> 
+T Separations::get_corrected_param(T param, T param_uncertainty) {
+  if (param_uncertainty == 0) {
+    return param;
   } else {
       std::default_random_engine de(std::clock());
-      std::normal_distribution<double> nd(eff, efficiency_uncertainty);
-      
-      double val = nd(de);
-      if (val > 1){
-        return 1;
-      }
-      return val;
+      std::normal_distribution<double> nd(param, param*param_uncertainty);
+
+      double val = std::round(nd(de));
+      return (T)val;
   }
 }
 
