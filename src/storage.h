@@ -171,7 +171,7 @@ class Storage
                       "tooltip":"relative uncertainty in residence time (timesteps)",\
                       "units":"n.a.",\
                       "uilabel":"Residence Time relative Uncertainty"}
-  int residence_time_uncertainty;
+  double residence_time_uncertainty;
 
 
   #pragma cyclus var {"default": 1e299,\

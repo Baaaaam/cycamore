@@ -225,14 +225,12 @@ std::set<cyclus::BidPortfolio<cyclus::Material>::Ptr> Enrichment::GetMatlBids(
       }
     }
 
-    
     Converter<Material>::Ptr sc(new SWUConverter(FeedAssay(), corrected_tails_assay));
     Converter<Material>::Ptr nc(new NatUConverter(FeedAssay(), corrected_tails_assay));
     CapacityConstraint<Material> swu(swu_capacity, sc);
     CapacityConstraint<Material> natu(inventory.quantity(), nc);
     commod_port->AddConstraint(swu);
     commod_port->AddConstraint(natu);
-
     
     LOG(cyclus::LEV_INFO5, "EnrFac")
         << prototype() << " adding a swu constraint of " << swu.capacity();
@@ -479,7 +477,7 @@ T Enrichment::get_corrected_param(T param, T param_uncertainty) {
       std::default_random_engine de(std::clock());
       std::normal_distribution<double> nd(param, param*param_uncertainty);
 
-      double val = std::round(nd(de));
+      double val = nd(de);
       return (T)val;
   }
 }
