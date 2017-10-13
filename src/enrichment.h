@@ -271,7 +271,7 @@ class Enrichment
   /// Records an agent's latitude and longitude to the output db
   void RecordPosition();
   template<typename T> 
-  T get_corrected_param(T param, T uncertainty); 
+  double get_corrected_param(T param, T uncertainty); 
   
 
   #pragma cyclus var { \

@@ -101,7 +101,7 @@ class Storage
 
  protected:
   template<typename T> 
-  T get_corrected_param(T param, T uncertainty); 
+  double get_corrected_param(T param, T uncertainty); 
   
   
   ///   @brief adds a material into the incoming commodity inventory

@@ -474,7 +474,7 @@ double Enrichment::FeedAssay() {
 }
 
 template<typename T> 
-T Enrichment::get_corrected_param(T param, T param_uncertainty) {
+double Enrichment::get_corrected_param(T param, T param_uncertainty) {
   if (param_uncertainty == 0) {
     return param;
   } else {
@@ -482,7 +482,7 @@ T Enrichment::get_corrected_param(T param, T param_uncertainty) {
       std::normal_distribution<double> nd(param, param*param_uncertainty);
 
       double val = nd(de);
-      return (T)val;
+      return val;
   }
 }
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

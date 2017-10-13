@@ -377,7 +377,7 @@ double Separations::get_efficiency_corrected(double eff) {
 }
     
 template<typename T> 
-T Separations::get_corrected_param(T param, T param_uncertainty) {
+double Separations::get_corrected_param(T param, T param_uncertainty) {
   if (param_uncertainty == 0) {
     return param;
   } else {
@@ -385,7 +385,7 @@ T Separations::get_corrected_param(T param, T param_uncertainty) {
       std::normal_distribution<double> nd(param, param*param_uncertainty);
 
       double val = nd(de);
-      return (T)val;
+      return val;
   }
 }
 
