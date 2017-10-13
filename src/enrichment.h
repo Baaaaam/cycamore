@@ -267,7 +267,7 @@ class Enrichment : public cyclus::Facility {
   void RecordEnrichment_(double natural_u, double swu);
 
   template<typename T> 
-  T get_corrected_param(T param, T uncertainty); 
+  double get_corrected_param(T param, T uncertainty); 
   
 
   #pragma cyclus var { \

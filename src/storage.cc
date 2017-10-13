@@ -144,7 +144,7 @@ int Storage::ready_time() {
   if (residence_time_uncertainty == 0) {
     return context()->time() - residence_time;
   } else {
-    double var_residence = get_corrected_param<double>(residence_time, residence_time_uncertainty);
+    int var_residence = round(get_corrected_param<int>(residence_time, residence_time_uncertainty));
     int ready_time = context()->time() - (int)var_residence;
     return ready_time;
   }
@@ -236,7 +236,7 @@ void Storage::ReadyMatl_(int time) {
 }
 
 template<typename T> 
-T Storage::get_corrected_param(T param, T param_uncertainty) {
+double Storage::get_corrected_param(T param, T param_uncertainty) {
   if (param_uncertainty == 0) {
     return param;
   } else {
@@ -244,7 +244,7 @@ T Storage::get_corrected_param(T param, T param_uncertainty) {
       std::normal_distribution<double> nd(param, param*param_uncertainty);
 
       double val = nd(de);
-      return (T)val;
+      return val;
   }
 }
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
