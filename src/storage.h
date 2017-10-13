@@ -99,6 +99,10 @@ class Storage
   virtual void Tock();
 
  protected:
+  template<typename T> 
+  T get_corrected_param(T param, T uncertainty); 
+  
+  
   ///   @brief adds a material into the incoming commodity inventory
   ///   @param mat the material to add to the incoming inventory.
   ///   @throws if there is trouble with pushing to the inventory buffer.
@@ -164,9 +168,9 @@ class Storage
   int residence_time;
 
   #pragma cyclus var {"default": 0,\
-                      "tooltip":"error in residence time (timesteps)",\
-                      "units":"time steps",\
-                      "uilabel":"Residence Time Error"}
+                      "tooltip":"relative uncertainty in residence time (timesteps)",\
+                      "units":"n.a.",\
+                      "uilabel":"Residence Time relative Uncertainty"}
   int residence_time_uncertainty;
 
 
