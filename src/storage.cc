@@ -260,7 +260,7 @@ T Storage::get_corrected_param(T param, T param_uncertainty) {
       std::default_random_engine de(std::clock());
       std::normal_distribution<double> nd(param, param*param_uncertainty);
 
-      double val = std::round(nd(de));
+      double val = nd(de);
       return (T)val;
   }
 }
