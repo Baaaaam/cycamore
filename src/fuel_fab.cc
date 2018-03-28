@@ -259,12 +259,15 @@ void FuelFab::AcceptMatlTrades(
   // IMPORTANT - each buffer needs to be a single homogenous composition or
   // the inventory mixing constraints for bids don't work
   if (fill.count() > 1) {
+    std::cout << "FB 1" << std::endl;
     fill.Push(cyclus::toolkit::Squash(fill.PopN(fill.count())));
   }
   if (fiss.count() > 1) {
+    std::cout << "FB 3" << std::endl;
     fiss.Push(cyclus::toolkit::Squash(fiss.PopN(fiss.count())));
   }
   if (topup.count() > 1) {
+    std::cout << "FB 2" << std::endl;
     topup.Push(cyclus::toolkit::Squash(topup.PopN(topup.count())));
   }
 }
