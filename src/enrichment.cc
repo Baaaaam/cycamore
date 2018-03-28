@@ -392,7 +392,6 @@ cyclus::Material::Ptr Enrichment::Enrich_(cyclus::Material::Ptr mat,
   try {
     // required so popping doesn't take out too much
     if (cyclus::AlmostEq(feed_req, inventory.quantity())) {
-      std::cout << " EN " << std::endl;
       r = cyclus::toolkit::Squash(inventory.PopN(inventory.count()));
     } else {
       r = inventory.Pop(feed_req, cyclus::eps_rsrc());
