@@ -370,12 +370,6 @@ void Separations::RecordPosition() {
       ->Record();
 }
 
-double Separations::get_efficiency_corrected(double eff) {
-  if (efficiency_uncertainty == 0) {
-    return eff;
-  }
-}
-    
 template<typename T> 
 double Separations::get_corrected_param(T param, T param_uncertainty) {
   if (param_uncertainty == 0) {
