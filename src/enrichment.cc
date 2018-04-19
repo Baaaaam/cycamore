@@ -474,18 +474,6 @@ double Enrichment::FeedAssay() {
   return cyclus::toolkit::UraniumAssayMass(fission_matl);
 }
 
-template<typename T> 
-double Enrichment::get_corrected_param(T param, T param_uncertainty) {
-  if (param_uncertainty == 0) {
-    return param;
-  } else {
-      std::default_random_engine de(std::clock());
-      std::normal_distribution<double> nd(param, param*param_uncertainty);
-
-      double val = nd(de);
-      return val;
-  }
-}
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void Enrichment::RecordPosition() {
   std::string specification = this->spec();
@@ -499,6 +487,26 @@ void Enrichment::RecordPosition() {
       ->Record();
 }
 
+template <typename T>
+double Enrichment::get_corrected_param(T& param, double& param_uncertainty) {
+  if (param_uncertainty == 0) {
+    return param;
+  } else {
+    std::default_random_engine de(std::clock());
+    std::normal_distribution<double> nd(param, param * param_uncertainty);
+    double val = nd(de);
+    if(systematic_uncertainty){
+      if( (T)val == (int)val ){
+        param = round(val);
+      }
+      else{
+        param = (T)val;
+      }
+      param_uncertainty = 0;
+    }
+    return val;
+  }
+}
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 extern "C" cyclus::Agent* ConstructEnrichment(cyclus::Context* ctx) {
   return new Enrichment(ctx);

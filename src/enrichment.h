@@ -125,6 +125,13 @@ class Enrichment
   "The Enrichment facility is a simple agent that enriches natural "	 \
   "uranium in a Cyclus simulation. It does not explicitly compute "	\
   "the physical enrichment process, rather it calculates the SWU "	\
+class Enrichment : public cyclus::Facility {
+#pragma cyclus note { \
+  "niche": "enrichment facility", \
+  "doc": \
+  "The Enrichment facility is a simple agent that enriches natural " \
+  "uranium in a Cyclus simulation. It does not explicitly compute " \
+  "the physical enrichment process, rather it calculates the SWU " \
   "required to convert an source uranium recipe (i.e. natural uranium) " \
   "into a requested enriched recipe (i.e. 4% enriched uranium), given " \
   "the natural uranium inventory constraint and its SWU capacity " \
@@ -270,8 +277,10 @@ class Enrichment
 
   /// Records an agent's latitude and longitude to the output db
   void RecordPosition();
-  template<typename T> 
-  double get_corrected_param(T param, T uncertainty); 
+  
+  
+  template<typename T>
+  double get_corrected_param(T& param, double& uncertainty);
   
 
   #pragma cyclus var { \
@@ -322,6 +331,10 @@ class Enrichment
   }
   double tails_assay_uncertainty;
 
+  #pragma cyclus var {"default": False,\
+                      "tooltip":"Bool to determine how Storage handles batches",\
+  }
+  bool systematic_uncertainty;                    
   #pragma cyclus var { \
     "default": 0, "tooltip": "initial uranium reserves (kg)", \
     "uilabel": "Initial Feed Inventory", \
