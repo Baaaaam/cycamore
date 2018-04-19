@@ -119,13 +119,6 @@ class NatUConverter : public cyclus::Converter<cyclus::Material> {
 class Enrichment 
   : public cyclus::Facility,
     public cyclus::toolkit::Position {
-#pragma cyclus note {   	  \
-  "niche": "enrichment facility",				  \
-  "doc":								\
-  "The Enrichment facility is a simple agent that enriches natural "	 \
-  "uranium in a Cyclus simulation. It does not explicitly compute "	\
-  "the physical enrichment process, rather it calculates the SWU "	\
-class Enrichment : public cyclus::Facility {
 #pragma cyclus note { \
   "niche": "enrichment facility", \
   "doc": \
