@@ -103,8 +103,8 @@ class Separations : public cyclus::Facility {
 
 
   private:
-  template<typename T> 
-  double get_corrected_param(T param, T uncertainty); 
+  template<typename T>
+  double get_corrected_param(T& param, double& uncertainty);
 
   #pragma cyclus var { \
     "doc": "Ordered list of commodities on which to request feed material to " \
@@ -210,6 +210,12 @@ class Separations : public cyclus::Facility {
     "uilabel": "Efficiency Error",                             \
   }
   double efficiency_uncertainty;
+  
+  #pragma cyclus var {"default": False,\
+                      "tooltip":"Bool to determine how Storage handles batches",\
+  }
+  bool systematic_uncertainty;                    
+  
   // custom SnapshotInv and InitInv and EnterNotify are used to persist this
   // state var.
   std::map<std::string, cyclus::toolkit::ResBuf<cyclus::Material> > streambufs;

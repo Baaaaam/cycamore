@@ -266,8 +266,8 @@ class Enrichment : public cyclus::Facility {
   ///  @brief records and enrichment with the cyclus::Recorder
   void RecordEnrichment_(double natural_u, double swu);
 
-  template<typename T> 
-  double get_corrected_param(T param, T uncertainty); 
+  template<typename T>
+  double get_corrected_param(T& param, double& uncertainty);
   
 
   #pragma cyclus var { \
@@ -318,6 +318,10 @@ class Enrichment : public cyclus::Facility {
   }
   double tails_assay_uncertainty;
 
+  #pragma cyclus var {"default": False,\
+                      "tooltip":"Bool to determine how Storage handles batches",\
+  }
+  bool systematic_uncertainty;                    
   #pragma cyclus var { \
     "default": 0, "tooltip": "initial uranium reserves (kg)", \
     "uilabel": "Initial Feed Inventory", \

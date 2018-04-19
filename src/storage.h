@@ -99,8 +99,8 @@ class Storage
   virtual void Tock();
 
  protected:
-  template<typename T> 
-  double get_corrected_param(T param, T uncertainty); 
+  template<typename T>
+  double get_corrected_param(T& param, double& uncertainty);
   
   
   ///   @brief adds a material into the incoming commodity inventory
@@ -173,6 +173,10 @@ class Storage
                       "uilabel":"Residence Time relative Uncertainty"}
   double residence_time_uncertainty;
 
+  #pragma cyclus var {"default": False,\
+                      "tooltip":"Bool to determine how Storage handles batches",\
+  }
+  bool systematic_uncertainty;                    
 
   #pragma cyclus var {"default": 1e299,\
                      "tooltip":"throughput per timestep (kg)",\
