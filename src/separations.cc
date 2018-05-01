@@ -118,7 +118,12 @@ void Separations::Tick() {
     if (efficiency_uncertainty != 0 ){
       std::map<int, double>::iterator it2;
       for (it2 = eff_table.begin(); it2 !=eff_table.end(); ++it2) {
-          it2->second = 1 - get_corrected_param<double>( 1 - it2->second, efficiency_uncertainty);
+          it2->second = get_corrected_param<double>( it2->second, efficiency_uncertainty);
+      }
+      if(systematic_uncertainty){
+        
+        info.second = eff_table;
+      
       }
     }
     stagedsep[name] = SepMaterial(eff_table, mat);
@@ -126,6 +131,10 @@ void Separations::Tick() {
     if (frac < maxfrac) {
       maxfrac = frac;
     }
+  }
+  if (systematic_uncertainty){
+    efficiency_uncertainty = 0;
+    systematic_uncertainty = false;
   }
 
   std::map<std::string, Material::Ptr>::iterator itf;
@@ -359,18 +368,9 @@ double Separations::get_corrected_param(T& param, double& param_uncertainty) {
     return param;
   } else {
     std::default_random_engine de(std::clock());
-    std::normal_distribution<double> nd(param, param * param_uncertainty);
+    std::normal_distribution<double> nd( (1-param), (1-param) * param_uncertainty);
     double val = nd(de);
-    if(systematic_uncertainty){
-      if( (T)val == (int)val ){
-        param = round(val);
-      }
-      else{
-        param = (T)val;
-      }
-      param_uncertainty = 0;
-    }
-    return val;
+    return (1. - val);
   }
 }
 
