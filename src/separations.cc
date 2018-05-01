@@ -121,9 +121,7 @@ void Separations::Tick() {
           it2->second = get_corrected_param<double>( it2->second, efficiency_uncertainty);
       }
       if(systematic_uncertainty){
-        
         info.second = eff_table;
-      
       }
     }
     stagedsep[name] = SepMaterial(eff_table, mat);
