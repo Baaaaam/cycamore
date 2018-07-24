@@ -130,10 +130,17 @@ void Separations::Tick() {
         info.second = eff_table;
       }
     }
+    
+    
     stagedsep[name] = SepMaterial(eff_table, mat);
     double frac = streambufs[name].space() / stagedsep[name]->quantity();
     if (frac < maxfrac) {
       maxfrac = frac;
+    }
+    // if systematic don't re-sample the uncertain values
+    if (systematic_uncertainty){
+      efficiency_uncertainty = 0;
+      systematic_uncertainty = false;
     }
   }
 
