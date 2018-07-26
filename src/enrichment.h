@@ -317,11 +317,23 @@ class Enrichment : public cyclus::Facility {
     "uilabel": "Tails Assay Relative Uncertianty", \
   }
   double tails_assay_uncertainty;
+  
+  #pragma cyclus var { \
+    "default": 0.00, \
+    "tooltip": "product assay relative uncertainty", \
+    "uilabel": "Product Assay Relative Uncertianty", \
+  }
+  double product_assay_uncertainty;
+
 
   #pragma cyclus var {"default": False,\
                       "tooltip":"Bool to determine how Storage handles batches",\
   }
   bool systematic_uncertainty;                    
+  
+  double prod_uncertainty_factor;
+  
+
   #pragma cyclus var { \
     "default": 0, "tooltip": "initial uranium reserves (kg)", \
     "uilabel": "Initial Feed Inventory", \
