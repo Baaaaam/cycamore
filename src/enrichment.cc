@@ -7,6 +7,7 @@
 #include <sstream>
 #include <vector>
 #include <time.h>
+#include <random>
 
 #include <boost/lexical_cast.hpp>
 
@@ -26,6 +27,7 @@ Enrichment::Enrichment(cyclus::Context* ctx)
       order_prefs(true),
       latitude(0.0),
       longitude(0.0),
+      prod_uncertainty_factor(0),
       coordinates(latitude, longitude) {}
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -373,8 +375,19 @@ cyclus::Material::Ptr Enrichment::Enrich_(cyclus::Material::Ptr mat,
     var_assay = tails_assay;
   }
 
+  double prod_assay = UraniumAssayMass(mat);
+  double corrected_prod_assay = get_corrected_param(prod_assay, product_assay_uncertainty);
+ 
+  // if systematic, register the relative offset diff and reapplies it next time
+  if( corrected_prod_assay == prod_assay  && systematic_uncertainty){
+    prod_assay += prod_assay*prod_uncertainty_factor;
+  } else if(systematic_uncertainty){
+    prod_uncertainty_factor = (prod_assay - UraniumAssayMass(mat)) / UraniumAssayMass(mat);
+  }
+
+  prod_assay = corrected_prod_assay;
   // get enrichment parameters
-  Assays assays(FeedAssay(), UraniumAssayMass(mat), var_assay);
+  Assays assays(FeedAssay(), prod_assay, var_assay);
   double swu_req = SwuRequired(qty, assays);
   double natu_req = FeedQty(qty, assays);
 
@@ -390,7 +403,12 @@ cyclus::Material::Ptr Enrichment::Enrich_(cyclus::Material::Ptr mat,
   nucs.insert(922380000);
   double natu_frac = mq.mass_frac(nucs);
   double feed_req = natu_req / natu_frac;
-
+  
+  // if need more feed than in inventory scale down the product quantity
+  if(feed_req > inventory.quantity() ){
+    qty = qty / feed_req *inventory.quantity();
+    feed_req = inventory.quantity();
+  }
   // pop amount from inventory and blob it into one material
   Material::Ptr r;
   try {
@@ -413,7 +431,10 @@ cyclus::Material::Ptr Enrichment::Enrich_(cyclus::Material::Ptr mat,
 
   // "enrich" it, but pull out the composition and quantity we require from the
   // blob
-  cyclus::Composition::Ptr comp = mat->comp();
+  cyclus::CompMap compmap;
+  compmap[922350000] = prod_assay;
+  compmap[922380000] = 1 - prod_assay;
+  cyclus::Composition::Ptr comp = cyclus::Composition::CreateFromMass(compmap);
   Material::Ptr response = r->ExtractComp(qty, comp);
   tails.Push(r);
 
