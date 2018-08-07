@@ -123,7 +123,7 @@ void Separations::Tick() {
     if (efficiency_uncertainty != 0) {
       std::map<int, double>::iterator it2;
       for (it2 = eff_table.begin(); it2 != eff_table.end(); ++it2) {
-        it2->second = get_corrected_param(it2->second, efficiency_uncertainty);
+        it2->second = 1 - get_corrected_param( 1 - it2->second, efficiency_uncertainty);
       }
     }
     
