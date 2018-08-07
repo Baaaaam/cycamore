@@ -270,11 +270,6 @@ class Enrichment
 
   /// Records an agent's latitude and longitude to the output db
   void RecordPosition();
-  
-  
-  template<typename T>
-  double get_corrected_param(T& param, double& uncertainty);
-  
 
   #pragma cyclus var { \
     "tooltip": "feed commodity", \
@@ -331,12 +326,6 @@ class Enrichment
   }
   double product_assay_uncertainty;
 
-  double prod_uncertainty_factor;
-  #pragma cyclus var {"default": False,\
-                      "tooltip":"Bool to determine how Storage handles batches",\
-  }
-  bool systematic_uncertainty;                    
-  
   #pragma cyclus var { \
     "default": 0, "tooltip": "initial uranium reserves (kg)", \
     "uilabel": "Initial Feed Inventory", \

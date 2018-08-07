@@ -6,10 +6,10 @@
 #include <limits>
 #include <sstream>
 #include <vector>
-#include <time.h>
-#include <random>
 
 #include <boost/lexical_cast.hpp>
+
+#include "uncertainty.h"
 
 namespace cycamore {
 
@@ -27,7 +27,6 @@ Enrichment::Enrichment(cyclus::Context* ctx)
       order_prefs(true),
       latitude(0.0),
       longitude(0.0),
-      prod_uncertainty_factor(0),
       coordinates(latitude, longitude) {}
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -212,7 +211,7 @@ std::set<cyclus::BidPortfolio<cyclus::Material>::Ptr> Enrichment::GetMatlBids(
     
     double corrected_tails_assay = tails_assay;
     if (tails_assay_uncertainty != 0){
-      corrected_tails_assay = get_corrected_param<double>(tails_assay, tails_assay_uncertainty);
+      corrected_tails_assay = get_corrected_param(tails_assay, tails_assay_uncertainty);
     }
 
     std::vector<Request<Material>*>& commod_requests =
@@ -377,13 +376,6 @@ cyclus::Material::Ptr Enrichment::Enrich_(cyclus::Material::Ptr mat,
 
   double prod_assay = UraniumAssayMass(mat);
   double corrected_prod_assay = get_corrected_param(prod_assay, product_assay_uncertainty);
- 
-  // if systematic, register the relative offset diff and reapplies it next time
-  if( corrected_prod_assay == prod_assay  && systematic_uncertainty){
-    prod_assay += prod_assay*prod_uncertainty_factor;
-  } else if(systematic_uncertainty){
-    prod_uncertainty_factor = (prod_assay - UraniumAssayMass(mat)) / UraniumAssayMass(mat);
-  }
 
   prod_assay = corrected_prod_assay;
   // get enrichment parameters
@@ -508,26 +500,6 @@ void Enrichment::RecordPosition() {
       ->Record();
 }
 
-template <typename T>
-double Enrichment::get_corrected_param(T& param, double& param_uncertainty) {
-  if (param_uncertainty == 0) {
-    return param;
-  } else {
-    std::default_random_engine de(std::clock());
-    std::normal_distribution<double> nd(param, param * param_uncertainty);
-    double val = nd(de);
-    if(systematic_uncertainty){
-      if( (T)val == (int)val ){
-        param = round(val);
-      }
-      else{
-        param = (T)val;
-      }
-      param_uncertainty = 0;
-    }
-    return val;
-  }
-}
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 extern "C" cyclus::Agent* ConstructEnrichment(cyclus::Context* ctx) {
   return new Enrichment(ctx);

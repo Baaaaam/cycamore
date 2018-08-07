@@ -6,14 +6,10 @@
 #include <vector>
 
 #include "cyclus.h"
+#include "cycamore_version.h"
 
 // forward declaration
-namespace storage {
-class Storage;
-} // namespace storage
-
-
-namespace storage {
+namespace cycamore {
 /// @class Storage
 ///
 /// This Facility is intended to hold materials for a user specified
@@ -100,8 +96,6 @@ class Storage
   virtual void Tock();
 
  protected:
-  template<typename T>
-  double get_corrected_param(T& param, double& uncertainty);
   
   
   ///   @brief adds a material into the incoming commodity inventory
@@ -173,11 +167,6 @@ class Storage
                       "units":"n.a.",\
                       "uilabel":"Residence Time relative Uncertainty"}
   double residence_time_uncertainty;
-
-  #pragma cyclus var {"default": False,\
-                      "tooltip":"Bool to determine how Storage handles batches",\
-  }
-  bool systematic_uncertainty;                    
 
   #pragma cyclus var {"default": 1e299,\
                      "tooltip":"throughput per timestep (kg)",\
@@ -252,6 +241,6 @@ class Storage
   friend class StorageTest;
 };
 
-}  // namespace storage
+}  // namespace cycamore
 
 #endif  // CYCLUS_STORAGES_STORAGE_H_

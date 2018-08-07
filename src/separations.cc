@@ -1,6 +1,6 @@
 #include "separations.h"
-#include <random>
-#include <time.h>
+
+#include "uncertainty.h"
 
 using cyclus::Material;
 using cyclus::Composition;
@@ -123,11 +123,7 @@ void Separations::Tick() {
     if (efficiency_uncertainty != 0) {
       std::map<int, double>::iterator it2;
       for (it2 = eff_table.begin(); it2 != eff_table.end(); ++it2) {
-        it2->second =
-            get_corrected_param<double>(it2->second, efficiency_uncertainty);
-      }
-      if (systematic_uncertainty) {
-        info.second = eff_table;
+        it2->second = get_corrected_param(it2->second, efficiency_uncertainty);
       }
     }
     
@@ -136,11 +132,6 @@ void Separations::Tick() {
     double frac = streambufs[name].space() / stagedsep[name]->quantity();
     if (frac < maxfrac) {
       maxfrac = frac;
-    }
-    // if systematic don't re-sample the uncertain values
-    if (systematic_uncertainty){
-      efficiency_uncertainty = 0;
-      systematic_uncertainty = false;
     }
   }
 
@@ -380,20 +371,6 @@ void Separations::RecordPosition() {
       ->AddVal("Longitude", longitude)
       ->Record();
 }
-
-template <typename T>
-double Separations::get_corrected_param(T& param, double& param_uncertainty) {
-  if (param_uncertainty == 0) {
-    return param;
-  } else {
-    std::default_random_engine de(std::clock());
-    std::normal_distribution<double> nd( (1-param), (1-param) * param_uncertainty);
-    double val = nd(de);
-    return (1. - val);
-  }
-}
-
-
 
 extern "C" cyclus::Agent* ConstructSeparations(cyclus::Context* ctx) {
   return new Separations(ctx);

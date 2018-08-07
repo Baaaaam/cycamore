@@ -5,6 +5,8 @@ CONFIGURE_FILE(cycamore_version.h.in "${CMAKE_CURRENT_SOURCE_DIR}/cycamore_versi
 
 SET(CYCLUS_CUSTOM_HEADERS "cycamore_version.h")
 
+USE_CYCLUS("cycamore" "uncertainty")
+
 USE_CYCLUS("cycamore" "reactor")
 
 USE_CYCLUS("cycamore" "fuel_fab")

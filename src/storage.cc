@@ -1,10 +1,10 @@
 // storage.cc
 // Implements the Storage class
 #include "storage.h"
-#include <random>
-#include <time.h>
 
-namespace storage {
+#include "uncertainty.h"
+
+namespace cycamore {
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 Storage::Storage(cyclus::Context* ctx) 
@@ -18,29 +18,29 @@ Storage::Storage(cyclus::Context* ctx)
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // pragmas
 
-#pragma cyclus def schema storage::Storage
+#pragma cyclus def schema cycamore::Storage
 
-#pragma cyclus def annotations storage::Storage
+#pragma cyclus def annotations cycamore::Storage
 
-#pragma cyclus def initinv storage::Storage
+#pragma cyclus def initinv cycamore::Storage
 
-#pragma cyclus def snapshotinv storage::Storage
+#pragma cyclus def snapshotinv cycamore::Storage
 
-#pragma cyclus def infiletodb storage::Storage
+#pragma cyclus def infiletodb cycamore::Storage
 
-#pragma cyclus def snapshot storage::Storage
+#pragma cyclus def snapshot cycamore::Storage
 
-#pragma cyclus def clone storage::Storage
+#pragma cyclus def clone cycamore::Storage
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void Storage::InitFrom(Storage* m) {
-#pragma cyclus impl initfromcopy storage::Storage
+#pragma cyclus impl initfromcopy cycamore::Storage
   cyclus::toolkit::CommodityProducer::Copy(m);
 }
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void Storage::InitFrom(cyclus::QueryableBackend* b) {
-#pragma cyclus impl initfromdb storage::Storage
+#pragma cyclus impl initfromdb cycamore::Storage
 
   using cyclus::toolkit::Commodity;
   Commodity commod = Commodity(out_commods.front());
@@ -148,7 +148,7 @@ int Storage::ready_time() {
   if (residence_time_uncertainty == 0) {
     return context()->time() - residence_time;
   } else {
-    int var_residence = round(get_corrected_param<int>(residence_time, residence_time_uncertainty));
+    int var_residence = get_corrected_param(residence_time, residence_time_uncertainty);
     int ready_time = context()->time() - (int)var_residence;
     return ready_time;
   }
@@ -251,30 +251,9 @@ void Storage::RecordPosition() {
       ->Record();
 }
 
-
-template <typename T>
-double Storage::get_corrected_param(T& param, double& param_uncertainty) {
-  if (param_uncertainty == 0) {
-    return param;
-  } else {
-    std::default_random_engine de(std::clock());
-    std::normal_distribution<double> nd(param, param * param_uncertainty);
-    double val = nd(de);
-    if(systematic_uncertainty){
-      if( (T)val == (int)val ){
-        param = round(val);
-      }
-      else{
-        param = (T)val;
-      }
-      param_uncertainty = 0;
-    }
-    return val;
-  }
-}
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 extern "C" cyclus::Agent* ConstructStorage(cyclus::Context* ctx) {
   return new Storage(ctx);
 }
 
-}  // namespace storage
+}  // namespace cycamore
