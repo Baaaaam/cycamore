@@ -480,7 +480,7 @@ void EnrichmentTest::InitParameters() {
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void EnrichmentTest::SetUpSource() {
   src_facility->feed_recipe = feed_recipe;
-  src_facility->feed_commod = feed_commod;
+  src_facility->feed_commods.push_back(feed_commod);
   src_facility->product_commod = product_commod;
   src_facility->tails_commod = tails_commod;
   src_facility->tails_assay = tails_assay;

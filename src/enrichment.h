@@ -269,14 +269,19 @@ class Enrichment
 
   /// Records an agent's latitude and longitude to the output db
   void RecordPosition();
+  #pragma cyclus var {"tooltip":"feed commodity",\
+                      "doc":"feed commodities accepted by this facility",\
+                      "uilabel":"Feed Commodities",\
+                      "uitype":["oneormore","incommodity"]}
+  std::vector<std::string> feed_commods;
+  #pragma cyclus var {"default": [],\
+                      "doc":"preferences for each of the given commodities, in the same order."\
+                      "Defauts to 1 if unspecified",\
+                      "uilabel":"In Commody Preferences", \
+                      "range": [None, [1e-299, 1e299]], \
+                      "uitype":["oneormore", "range"]}
+  std::vector<double> feed_commod_prefs;
 
-  #pragma cyclus var { \
-    "tooltip": "feed commodity",					\
-    "doc": "feed commodity that the enrichment facility accepts",	\
-    "uilabel": "Feed Commodity",                                    \
-    "uitype": "incommodity" \
-  }
-  std::string feed_commod;
 
   #pragma cyclus var { \
     "tooltip": "feed recipe",						\

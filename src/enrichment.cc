@@ -18,7 +18,6 @@ Enrichment::Enrichment(cyclus::Context* ctx)
       swu_capacity(0),
       max_enrich(1),
       initial_feed(0),
-      feed_commod(""),
       feed_recipe(""),
       product_commod(""),
       tails_commod(""),
@@ -36,8 +35,11 @@ std::string Enrichment::str() {
   ss << cyclus::Facility::str() << " with enrichment facility parameters:"
      << " * SWU capacity: " << SwuCapacity()
      << " * Tails assay: " << tails_assay << " * Feed assay: " << FeedAssay()
-     << " * Input cyclus::Commodity: " << feed_commod
-     << " * Output cyclus::Commodity: " << product_commod
+     << " * Input cyclus::Commodity: ";
+  for (int i = 0; i < feed_commods.size(); i++) {
+    ss << feed_commods[i] << " ,";
+  }
+  ss << " * Output cyclus::Commodity: " << product_commod
      << " * Tails cyclus::Commodity: " << tails_commod;
   return ss.str();
 }
@@ -83,11 +85,17 @@ Enrichment::GetMatlRequests() {
   RequestPortfolio<Material>::Ptr port(new RequestPortfolio<Material>());
   Material::Ptr mat = Request_();
   double amt = mat->quantity();
+  
+  bool exclusive = false;
 
-  if (amt > cyclus::eps_rsrc()) {
-    port->AddRequest(mat, this, feed_commod);
-    ports.insert(port);
+  std::vector<cyclus::Request<Material>*> reqs;
+  for (int i = 0; i < feed_commods.size(); i++) {
+    std::string commod = feed_commods[i];
+    double pref = feed_commod_prefs[i];
+    reqs.push_back(port->AddRequest(mat, this, commod, pref, exclusive));
   }
+  port->AddMutualReqs(reqs);
+  ports.insert(port);
 
   return ports;
 }
@@ -329,9 +337,9 @@ void Enrichment::AddMat_(cyclus::Material::Ptr mat) {
   }
 
   LOG(cyclus::LEV_INFO5, "EnrFac")
-      << prototype() << " added " << mat->quantity() << " of " << feed_commod
-      << " to its inventory, which is holding " << inventory.quantity()
-      << " total.";
+      << prototype() << " added " << mat->quantity()
+      << " of feed mat to its inventory, which is holding "
+      << inventory.quantity() << " total.";
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
