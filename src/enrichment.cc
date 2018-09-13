@@ -54,6 +54,17 @@ void Enrichment::Build(cyclus::Agent* parent) {
                                     context()->GetRecipe(feed_recipe)));
   }
 
+  if (feed_commod_prefs.empty()) {
+    for (int i = 0; i < feed_commods.size(); i++) {
+      feed_commod_prefs.push_back(cyclus::kDefaultPref);
+    }
+  } else if (feed_commod_prefs.size() != feed_commods.size()) {
+    std::stringstream ss;
+    ss << "prototype '" << prototype() << "' has " << feed_commod_prefs.size()
+       << " feed_commod_prefs vals, expected " << feed_commods.size();
+    throw cyclus::ValidationError(ss.str());
+  }
+  
   LOG(cyclus::LEV_DEBUG2, "EnrFac") << "Enrichment "
                                     << " entering the simuluation: ";
   LOG(cyclus::LEV_DEBUG2, "EnrFac") << str();
@@ -66,12 +77,15 @@ void Enrichment::Tick() { current_swu_capacity = SwuCapacity(); }
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void Enrichment::Tock() {
   using cyclus::toolkit::RecordTimeSeries;
+  std::cout << "Enricht " << __LINE__ << std::endl;
+  
   LOG(cyclus::LEV_INFO4, "EnrFac") << prototype() << " used "
                                    << intra_timestep_swu_ << " SWU";
   RecordTimeSeries<cyclus::toolkit::ENRICH_SWU>(this, intra_timestep_swu_);
   LOG(cyclus::LEV_INFO4, "EnrFac") << prototype() << " used "
                                    << intra_timestep_feed_ << " feed";
   RecordTimeSeries<cyclus::toolkit::ENRICH_FEED>(this, intra_timestep_feed_);
+  std::cout << "Enricht " << __LINE__ << std::endl;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -81,6 +95,7 @@ Enrichment::GetMatlRequests() {
   using cyclus::RequestPortfolio;
   using cyclus::Request;
 
+  std::cout << "Enricht " << __LINE__ << std::endl;
   std::set<RequestPortfolio<Material>::Ptr> ports;
   RequestPortfolio<Material>::Ptr port(new RequestPortfolio<Material>());
   Material::Ptr mat = Request_();
@@ -88,6 +103,7 @@ Enrichment::GetMatlRequests() {
   
   bool exclusive = false;
 
+  std::cout << "Enricht " << __LINE__ << std::endl;
   std::vector<cyclus::Request<Material>*> reqs;
   for (int i = 0; i < feed_commods.size(); i++) {
     std::string commod = feed_commods[i];
@@ -96,6 +112,7 @@ Enrichment::GetMatlRequests() {
   }
   port->AddMutualReqs(reqs);
   ports.insert(port);
+  std::cout << "Enricht " << __LINE__ << std::endl;
 
   return ports;
 }
@@ -103,11 +120,13 @@ Enrichment::GetMatlRequests() {
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 bool SortBids(cyclus::Bid<cyclus::Material>* i,
               cyclus::Bid<cyclus::Material>* j) {
+  std::cout << "Enricht " << __LINE__ << std::endl;
   cyclus::Material::Ptr mat_i = i->offer();
   cyclus::Material::Ptr mat_j = j->offer();
 
   cyclus::toolkit::MatQuery mq_i(mat_i);
   cyclus::toolkit::MatQuery mq_j(mat_j);
+  std::cout << "Enricht " << __LINE__ << std::endl;
 
   return ((mq_i.mass(922350000) / mq_i.qty()) <=
           (mq_j.mass(922350000) / mq_j.qty()));
@@ -120,13 +139,16 @@ void Enrichment::AdjustMatlPrefs(
   using cyclus::Bid;
   using cyclus::Material;
   using cyclus::Request;
+  std::cout << "Enricht " << __LINE__ << std::endl;
 
   if (order_prefs == false) {
     return;
   }
 
+  std::cout << "Enricht " << __LINE__ << std::endl;
   cyclus::PrefMap<cyclus::Material>::type::iterator reqit;
 
+  std::cout << "Enricht " << __LINE__ << std::endl;
   // Loop over all requests
   for (reqit = prefs.begin(); reqit != prefs.end(); ++reqit) {
     std::vector<Bid<Material>*> bids_vector;
@@ -157,19 +179,23 @@ void Enrichment::AdjustMatlPrefs(
       (reqit->second)[bids_vector[bidit]] = new_pref;
     }  // each bid
   }    // each Material Request
+  std::cout << "Enricht " << __LINE__ << std::endl;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void Enrichment::AcceptMatlTrades(
     const std::vector<std::pair<cyclus::Trade<cyclus::Material>,
                                 cyclus::Material::Ptr> >& responses) {
+  std::cout << "Enricht " << __LINE__ << std::endl;
   // see
   // http://stackoverflow.com/questions/5181183/boostshared-ptr-and-inheritance
+  std::cout << "Enricht " << __LINE__ << std::endl;
   std::vector<std::pair<cyclus::Trade<cyclus::Material>,
                         cyclus::Material::Ptr> >::const_iterator it;
   for (it = responses.begin(); it != responses.end(); ++it) {
     AddMat_(it->second);
   }
+  std::cout << "Enricht " << __LINE__ << std::endl;
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -182,6 +208,7 @@ std::set<cyclus::BidPortfolio<cyclus::Material>::Ptr> Enrichment::GetMatlBids(
   using cyclus::Material;
   using cyclus::Request;
   using cyclus::toolkit::MatVec;
+  std::cout << "Enricht " << __LINE__ << std::endl;
 
   std::set<BidPortfolio<Material>::Ptr> ports;
 
@@ -212,6 +239,7 @@ std::set<cyclus::BidPortfolio<cyclus::Material>::Ptr> Enrichment::GetMatlBids(
     ports.insert(tails_port);
   }
 
+  std::cout << "Enricht " << __LINE__ << std::endl;
   if ((out_requests.count(product_commod) > 0) && (inventory.quantity() > 0)) {
     BidPortfolio<Material>::Ptr commod_port(new BidPortfolio<Material>());
 
@@ -243,6 +271,7 @@ std::set<cyclus::BidPortfolio<cyclus::Material>::Ptr> Enrichment::GetMatlBids(
         << prototype() << " adding a natu constraint of " << natu.capacity();
     ports.insert(commod_port);
   }
+  std::cout << "Enricht " << __LINE__ << std::endl;
   return ports;
 }
 
@@ -262,6 +291,7 @@ void Enrichment::GetMatlTrades(
   using cyclus::Material;
   using cyclus::Trade;
 
+  std::cout << "Enricht " << __LINE__ << std::endl;
   intra_timestep_swu_ = 0;
   intra_timestep_feed_ = 0;
 
@@ -298,10 +328,12 @@ void Enrichment::GetMatlTrades(
                              " is being asked to provide more than" +
                              " its SWU capacity.");
   }
+  std::cout << "Enricht " << __LINE__ << std::endl;
 }
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void Enrichment::AddMat_(cyclus::Material::Ptr mat) {
   // Elements and isotopes other than U-235, U-238 are sent directly to tails
+  std::cout << "Enricht " << __LINE__ << std::endl;
   cyclus::CompMap cm = mat->comp()->atom();
   bool extra_u = false;
   bool other_elem = false;
@@ -335,6 +367,7 @@ void Enrichment::AddMat_(cyclus::Material::Ptr mat) {
     e.msg(Agent::InformErrorMsg(e.msg()));
     throw e;
   }
+  std::cout << "Enricht " << __LINE__ << std::endl;
 
   LOG(cyclus::LEV_INFO5, "EnrFac")
       << prototype() << " added " << mat->quantity()

@@ -120,7 +120,8 @@ class Storage
 
   /// @brief current maximum amount that can be added to processing
   inline double current_capacity() const { 
-    return (max_inv_size - processing.quantity() - stocks.quantity()); }
+    std::cout << max_inv_size - processing.quantity() - ready.quantity() - stocks.quantity() << std::endl;
+    return (max_inv_size - processing.quantity() - ready.quantity() - stocks.quantity()); }
 
   /// @brief returns the time key for ready materials
   int ready_time(){ return context()->time() - residence_time; }
