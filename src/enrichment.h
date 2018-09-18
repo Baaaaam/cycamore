@@ -26,6 +26,7 @@ class SWUConverter : public cyclus::Converter<cyclus::Material> {
           const * ctx = NULL) const {
     cyclus::toolkit::Assays assays(feed_, cyclus::toolkit::UraniumAssayMass(m),
                                    tails_);
+    std::cout << "SWU req: " << cyclus::toolkit::SwuRequired(m->quantity(), assays) << std::endl;
     return cyclus::toolkit::SwuRequired(m->quantity(), assays);
   }
 
@@ -69,6 +70,7 @@ class NatUConverter : public cyclus::Converter<cyclus::Material> {
 
     double natu_frac = mq.mass_frac(nucs);
     double natu_req = cyclus::toolkit::FeedQty(m->quantity(), assays);
+    std::cout << "UNat req: " << natu_req / natu_frac << std::endl;
     return natu_req / natu_frac;
   }
 
