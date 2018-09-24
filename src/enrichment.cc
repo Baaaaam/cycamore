@@ -44,15 +44,11 @@ std::string Enrichment::str() {
   return ss.str();
 }
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void Enrichment::Build(cyclus::Agent* parent) {
-  using cyclus::Material;
+void Enrichment::EnterNotify() {
+  cyclus::Facility::EnterNotify();
 
-  Facility::Build(parent);
-  if (initial_feed > 0) {
-    inventory.Push(Material::Create(this, initial_feed,
-                                    context()->GetRecipe(feed_recipe)));
-  }
+  // If the user ommitted fuel_prefs, we set it to zeros for each fuel
+  // type.  Without this segfaults could occur - yuck.
 
   if (feed_commod_prefs.empty()) {
     for (int i = 0; i < feed_commods.size(); i++) {
@@ -64,6 +60,34 @@ void Enrichment::Build(cyclus::Agent* parent) {
        << " feed_commod_prefs vals, expected " << feed_commods.size();
     throw cyclus::ValidationError(ss.str());
   }
+
+  // input consistency checking:
+  int n = tails_change_times.size();
+  std::stringstream ss;
+  if (tails_change_commods.size() != n) {
+    ss << "prototype '" << prototype() << "' has "
+       << tails_change_commods.size()
+       << " tails_change_commods vals, expected " << n << "\n";
+  }
+  if (tails_change_assay.size() != n) {
+    ss << "prototype '" << prototype() << "' has " << tails_change_assay.size()
+       << " tails_change_assay vals, expected " << n << "\n";
+  }
+
+  if (ss.str().size() > 0) {
+    throw cyclus::ValueError(ss.str());
+  }
+  RecordPosition();
+}
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+void Enrichment::Build(cyclus::Agent* parent) {
+  using cyclus::Material;
+
+  Facility::Build(parent);
+  if (initial_feed > 0) {
+    inventory.Push(Material::Create(this, initial_feed,
+                                    context()->GetRecipe(feed_recipe)));
+  }
   
   LOG(cyclus::LEV_DEBUG2, "EnrFac") << "Enrichment "
                                     << " entering the simuluation: ";
@@ -72,7 +96,24 @@ void Enrichment::Build(cyclus::Agent* parent) {
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void Enrichment::Tick() { current_swu_capacity = SwuCapacity(); }
+void Enrichment::Tick() { 
+  
+
+  int t = context()->time();
+
+  // update tails
+  for (int i = 0; i < tails_change_times.size(); i++) {
+    int change_t = tails_change_times[i];
+    if (t == change_t) {
+      tails_commod = tails_change_commods[i];
+      tails_assay = tails_change_assay[i];
+    }
+  }
+  
+  
+  current_swu_capacity = SwuCapacity(); 
+
+}
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void Enrichment::Tock() {
@@ -125,51 +166,6 @@ bool SortBids(cyclus::Bid<cyclus::Material>* i,
           (mq_j.mass(922350000) / mq_j.qty()));
 }
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Sort offers of input material to have higher preference for more
-//  U-235 content
-void Enrichment::AdjustMatlPrefs(
-    cyclus::PrefMap<cyclus::Material>::type& prefs) {
-  using cyclus::Bid;
-  using cyclus::Material;
-  using cyclus::Request;
-
-  if (order_prefs == false) {
-    return;
-  }
-
-  cyclus::PrefMap<cyclus::Material>::type::iterator reqit;
-
-  // Loop over all requests
-  for (reqit = prefs.begin(); reqit != prefs.end(); ++reqit) {
-    std::vector<Bid<Material>*> bids_vector;
-    std::map<Bid<Material>*, double>::iterator mit;
-    for (mit = reqit->second.begin(); mit != reqit->second.end(); ++mit) {
-      Bid<Material>* bid = mit->first;
-      bids_vector.push_back(bid);
-    }
-    std::sort(bids_vector.begin(), bids_vector.end(), SortBids);
-
-    // Assign preferences to the sorted vector
-    double n_bids = bids_vector.size();
-    bool u235_mass = 0;
-
-    for (int bidit = 0; bidit < bids_vector.size(); bidit++) {
-      int new_pref = bidit + 1;
-
-      // For any bids with U-235 qty=0, set pref to zero.
-      if (!u235_mass) {
-        cyclus::Material::Ptr mat = bids_vector[bidit]->offer();
-        cyclus::toolkit::MatQuery mq(mat);
-        if (mq.mass(922350000) == 0) {
-          new_pref = -1;
-        } else {
-          u235_mass = true;
-        }
-      }
-      (reqit->second)[bids_vector[bidit]] = new_pref;
-    }  // each bid
-  }    // each Material Request
-}
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void Enrichment::AcceptMatlTrades(
@@ -234,7 +230,7 @@ std::set<cyclus::BidPortfolio<cyclus::Material>::Ptr> Enrichment::GetMatlBids(
       Request<Material>* req = *it;
       Material::Ptr mat = req->target();
       double request_enrich = cyclus::toolkit::UraniumAssayMass(mat);
-      if (ValidReq(req->target()) &&
+      if (mat->quantity() >0 && ValidReq(req->target()) &&
           ((request_enrich < max_enrich) ||
            (cyclus::AlmostEq(request_enrich, max_enrich)))) {
         Material::Ptr offer = Offer_(req->target());

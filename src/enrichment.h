@@ -26,7 +26,6 @@ class SWUConverter : public cyclus::Converter<cyclus::Material> {
           const * ctx = NULL) const {
     cyclus::toolkit::Assays assays(feed_, cyclus::toolkit::UraniumAssayMass(m),
                                    tails_);
-    std::cout << "SWU req: " << cyclus::toolkit::SwuRequired(m->quantity(), assays) << std::endl;
     return cyclus::toolkit::SwuRequired(m->quantity(), assays);
   }
 
@@ -70,7 +69,6 @@ class NatUConverter : public cyclus::Converter<cyclus::Material> {
 
     double natu_frac = mq.mass_frac(nucs);
     double natu_req = cyclus::toolkit::FeedQty(m->quantity(), assays);
-    std::cout << "UNat req: " << natu_req / natu_frac << std::endl;
     return natu_req / natu_frac;
   }
 
@@ -173,6 +171,7 @@ class Enrichment
   // --- Facility Members ---
   /// perform module-specific tasks when entering the simulation
   virtual void Build(cyclus::Agent* parent);
+  virtual void EnterNotify();
   // ---
 
   // --- Agent Members ---
@@ -196,7 +195,6 @@ class Enrichment
   /// @brief The Enrichment adjusts preferences for offers of
   /// natural uranium it has received to maximize U-235 content
   /// Any offers that have zero U-235 content are not accepted
-  virtual void AdjustMatlPrefs(cyclus::PrefMap<cyclus::Material>::type& prefs);
 
   /// @brief The Enrichment place accepted trade Materials in their
   /// Inventory
@@ -317,6 +315,29 @@ class Enrichment
     "doc": "tails assay from the enrichment process",       \
   }
   double tails_assay;
+  
+  ///////////// tails changes ///////////
+  #pragma cyclus var { \
+    "default": [], \
+    "uilabel": "Time to Change Fresh/Spent Fuel Recipe", \
+    "doc": "A time step on which to change the input-output tails pair for " \
+           "a requested fresh fuel.", \
+  }
+  std::vector<int> tails_change_times;
+  
+  #pragma cyclus var { \
+    "default": [], \
+    "uilabel": "Commodity for changed tail assay", \
+    "uitype": ["oneormore", "outcommodity"], \
+  }
+  std::vector<std::string> tails_change_commods;
+
+  #pragma cyclus var {							\
+    "default": [], "tooltip": "tails assay change",				\
+    "uilabel": "Tails Assay Change",                             \
+  }
+  std::vector<double> tails_change_assay;
+  ////////////////////////////////////////
 
   #pragma cyclus var {							\
     "default": 0, "tooltip": "initial uranium reserves (kg)",		\
