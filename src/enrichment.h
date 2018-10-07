@@ -316,6 +316,32 @@ class Enrichment
   }
   double tails_assay;
   
+  ///////////// feed changes ///////////
+  #pragma cyclus var { \
+    "default": [], \
+    "uilabel": "Time to Change Fresh/Spent Fuel Recipe", \
+    "doc": "A time step on which to change the input-output tails pair for " \
+           "a requested fresh fuel.", \
+  }
+  std::vector<int> feed_change_times;
+  
+  #pragma cyclus var { \
+    "default": [], \
+    "uilabel": "Commodity for changed Feed assay", \
+    "uitype": ["oneormore", ["oneormore", "outcommodity"]], \
+  }
+  std::vector<std::vector<std::string>> feed_change_commods;
+
+  #pragma cyclus var {							\
+    "default": [], \
+    "tooltip": "feed prefs change",\
+    "uilabel": "Feed commodity preferences Change",                             \
+    "alias": ["prefs_change_prefs", [ "item", "pref"]], \
+    "uitype": ["oneormore", ["oneormore", "range"]], \
+  }
+  std::vector<std::vector<double>> prefs_change_prefs;
+  ////////////////////////////////////////
+  
   ///////////// tails changes ///////////
   #pragma cyclus var { \
     "default": [], \

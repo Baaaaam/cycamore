@@ -103,10 +103,15 @@ void Enrichment::Tick() {
 
   // update tails
   for (int i = 0; i < tails_change_times.size(); i++) {
-    int change_t = tails_change_times[i];
-    if (t == change_t) {
+    if (t == tails_change_times[i]) {
       tails_commod = tails_change_commods[i];
       tails_assay = tails_change_assay[i];
+    }
+  }
+  for (int i = 0; i < feed_change_times.size(); i++) {
+    if (t == feed_change_times[i]) {
+      feed_commods = feed_change_commods[i];
+      feed_commod_prefs = prefs_change_prefs[i];
     }
   }
   
