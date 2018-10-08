@@ -336,7 +336,6 @@ class Enrichment
     "default": [], \
     "tooltip": "feed prefs change",\
     "uilabel": "Feed commodity preferences Change",                             \
-    "alias": ["prefs_change_prefs", [ "item", "pref"]], \
     "uitype": ["oneormore", ["oneormore", "range"]], \
   }
   std::vector<std::vector<double>> prefs_change_prefs;
