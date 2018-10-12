@@ -123,7 +123,10 @@ void Enrichment::Tick() {
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void Enrichment::Tock() {
   using cyclus::toolkit::RecordTimeSeries;
-  
+  if (intra_timestep_swu_ < cyclus::eps()) {
+    intra_timestep_swu_ = 0;
+  }
+
   LOG(cyclus::LEV_INFO4, "EnrFac") << prototype() << " used "
                                    << intra_timestep_swu_ << " SWU";
   RecordTimeSeries<cyclus::toolkit::ENRICH_SWU>(this, intra_timestep_swu_);
@@ -131,7 +134,6 @@ void Enrichment::Tock() {
                                    << intra_timestep_feed_ << " feed";
   RecordTimeSeries<cyclus::toolkit::ENRICH_FEED>(this, intra_timestep_feed_);
 }
-
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 std::set<cyclus::RequestPortfolio<cyclus::Material>::Ptr>
 Enrichment::GetMatlRequests() {
