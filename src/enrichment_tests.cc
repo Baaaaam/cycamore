@@ -645,7 +645,7 @@ TEST_F(EnrichmentTest, Enrich) {
   src_facility->SetMaxInventorySize(natu_req);
   DoAddMat(GetMat(natu_req / 2));
   DoAddMat(GetMat(natu_req / 2));
-
+  src_facility->Tick();
   Material::Ptr response;
   EXPECT_NO_THROW(response = DoEnrich(target, qty));
   EXPECT_DOUBLE_EQ(src_facility->Tails().quantity(), tails_qty); 
@@ -656,7 +656,7 @@ TEST_F(EnrichmentTest, Enrich) {
   EXPECT_EQ(q.mass_frac(922380000), 1 - product_assay);
 
   // test too much natu request
-  DoAddMat(GetMat(natu_req - 1));
+  //DoAddMat(GetMat(natu_req - 1));
   EXPECT_THROW(response = DoEnrich(target, qty), cyclus::Error);
 }
 
@@ -701,7 +701,7 @@ TEST_F(EnrichmentTest, Response) {
   
   src_facility->SetMaxInventorySize(natu_req * 4);  // not capacitated by nat
   src_facility->SwuCapacity(swu_req);  // swu capacitated
-  
+  src_facility->Tick(); 
   src_facility->GetMatlTrades(trades, responses);
   
   // set up state

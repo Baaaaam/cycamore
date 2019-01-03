@@ -72,7 +72,12 @@ void Enrichment::Tick() {
      product_assay_correction =
         get_corrected_param(product_assay_correction, product_assay_uncertainty);
   }
-  std::cout << product_assay_correction << std::endl;
+  variable_swu_capacity = swu_capacity;
+  if (swu_uncertainty != 0) {
+     variable_swu_capacity =
+        get_corrected_param(swu_capacity, swu_uncertainty);
+  }
+  
   current_swu_capacity = SwuCapacity();
 }
 
@@ -249,7 +254,7 @@ std::set<cyclus::BidPortfolio<cyclus::Material>::Ptr> Enrichment::GetMatlBids(
         new SWUConverter(FeedAssay(), corrected_tails_assay));
     Converter<Material>::Ptr nc(
         new NatUConverter(FeedAssay(), corrected_tails_assay));
-    CapacityConstraint<Material> swu(swu_capacity, sc);
+    CapacityConstraint<Material> swu(variable_swu_capacity, sc);
     CapacityConstraint<Material> natu(inventory.quantity(), nc);
     commod_port->AddConstraint(swu);
     commod_port->AddConstraint(natu);

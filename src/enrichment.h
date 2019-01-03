@@ -237,7 +237,7 @@ class Enrichment
     current_swu_capacity = swu_capacity;
   }
 
-  inline double SwuCapacity() const { return swu_capacity; }
+  inline double SwuCapacity() const { return variable_swu_capacity; }
 
   inline const cyclus::toolkit::ResBuf<cyclus::Material>& Tails() const {
     return tails;
@@ -270,6 +270,7 @@ class Enrichment
   
   double product_assay_correction; 
   double corrected_tails_assay;
+  double variable_swu_capacity;
   /// Records an agent's latitude and longitude to the output db
   void RecordPosition();
 
@@ -327,6 +328,13 @@ class Enrichment
     "uilabel": "Product Assay Relative Uncertianty", \
   }
   double product_assay_uncertainty;
+  
+#pragma cyclus var { \
+    "default": 0.00, \
+    "tooltip": "SWU relative uncertainty", \
+    "uilabel": "SWU Relative Uncertianty", \
+  }
+  double swu_uncertainty;
 
   #pragma cyclus var { \
     "default": 0, "tooltip": "initial uranium reserves (kg)", \
