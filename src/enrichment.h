@@ -260,14 +260,16 @@ class Enrichment
   ///  @param req the requested material being responded to
   cyclus::Material::Ptr Offer_(cyclus::Material::Ptr req);
 
-  cyclus::Material::Ptr Enrich_(cyclus::Material::Ptr mat, double qty, double var_assay = -1);
+  cyclus::Material::Ptr Enrich_(cyclus::Material::Ptr mat, double qty);
 
   ///  @brief calculates the feed assay based on the unenriched inventory
   double FeedAssay();
 
   ///  @brief records and enrichment with the cyclus::Recorder
   void RecordEnrichment_(double natural_u, double swu);
-
+  
+  double product_assay_correction; 
+  double corrected_tails_assay;
   /// Records an agent's latitude and longitude to the output db
   void RecordPosition();
 

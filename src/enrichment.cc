@@ -61,7 +61,20 @@ void Enrichment::Build(cyclus::Agent* parent) {
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-void Enrichment::Tick() { current_swu_capacity = SwuCapacity(); }
+void Enrichment::Tick() {
+  corrected_tails_assay = tails_assay;
+  if (tails_assay_uncertainty != 0) {
+    corrected_tails_assay =
+        get_corrected_param(tails_assay, tails_assay_uncertainty);
+  }
+  product_assay_correction = 1.;
+  if (product_assay_uncertainty != 0) {
+     product_assay_correction =
+        get_corrected_param(product_assay_correction, product_assay_uncertainty);
+  }
+  std::cout << product_assay_correction << std::endl;
+  current_swu_capacity = SwuCapacity();
+}
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 void Enrichment::Tock() {
@@ -208,11 +221,6 @@ std::set<cyclus::BidPortfolio<cyclus::Material>::Ptr> Enrichment::GetMatlBids(
 
   if ((out_requests.count(product_commod) > 0) && (inventory.quantity() > 0)) {
     BidPortfolio<Material>::Ptr commod_port(new BidPortfolio<Material>());
-    
-    double corrected_tails_assay = tails_assay;
-    if (tails_assay_uncertainty != 0){
-      corrected_tails_assay = get_corrected_param(tails_assay, tails_assay_uncertainty);
-    }
 
     std::vector<Request<Material>*>& commod_requests =
         out_requests[product_commod];
@@ -221,22 +229,31 @@ std::set<cyclus::BidPortfolio<cyclus::Material>::Ptr> Enrichment::GetMatlBids(
       Request<Material>* req = *it;
       Material::Ptr mat = req->target();
       double request_enrich = cyclus::toolkit::UraniumAssayMass(mat);
-      if (ValidReq(req->target()) &&
-          ((request_enrich < max_enrich) ||
+      double product_enrich = request_enrich * product_assay_correction;      
+      
+      cyclus::CompMap compmap;
+      compmap[922350000] = product_enrich;
+      compmap[922380000] = 1 - product_enrich;
+      cyclus::Composition::Ptr comp = cyclus::Composition::CreateFromMass(compmap);
+      Material::Ptr response = Material::CreateUntracked(mat->quantity(), comp);
+      
+      if (ValidReq(response) &&
+          ((product_enrich< max_enrich) ||
            (cyclus::AlmostEq(request_enrich, max_enrich)))) {
-        Material::Ptr offer = Offer_(req->target());
-        reccord_tail_assay[req] = corrected_tails_assay;
+        Material::Ptr offer = Offer_(response);
         commod_port->AddBid(req, offer, this);
       }
     }
 
-    Converter<Material>::Ptr sc(new SWUConverter(FeedAssay(), corrected_tails_assay));
-    Converter<Material>::Ptr nc(new NatUConverter(FeedAssay(), corrected_tails_assay));
+    Converter<Material>::Ptr sc(
+        new SWUConverter(FeedAssay(), corrected_tails_assay));
+    Converter<Material>::Ptr nc(
+        new NatUConverter(FeedAssay(), corrected_tails_assay));
     CapacityConstraint<Material> swu(swu_capacity, sc);
     CapacityConstraint<Material> natu(inventory.quantity(), nc);
     commod_port->AddConstraint(swu);
     commod_port->AddConstraint(natu);
-    
+
     LOG(cyclus::LEV_INFO5, "EnrFac")
         << prototype() << " adding a swu constraint of " << swu.capacity();
     LOG(cyclus::LEV_INFO5, "EnrFac")
@@ -283,13 +300,13 @@ void Enrichment::GetMatlTrades(
       LOG(cyclus::LEV_INFO5, "EnrFac")
           << prototype() << " just received an order"
           << " for " << it->amt << " of " << product_commod;
-      double var_tail_assay = reccord_tail_assay[it->bid->request()];
-      response = Enrich_(it->bid->offer(), qty, var_tail_assay);
+      response = Enrich_(it->bid->offer(), qty);
     }
     responses.push_back(std::make_pair(*it, response));
   }
 
   if (cyclus::IsNegative(tails.quantity())) {
+  
     std::stringstream ss;
     ss << "is being asked to provide more than its current inventory.";
     throw cyclus::ValueError(Agent::InformErrorMsg(ss.str()));
@@ -360,8 +377,7 @@ cyclus::Material::Ptr Enrichment::Offer_(cyclus::Material::Ptr mat) {
       mat->quantity(), cyclus::Composition::CreateFromAtom(comp));
 }
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-cyclus::Material::Ptr Enrichment::Enrich_(cyclus::Material::Ptr mat,
-                                          double qty, double var_assay) {
+cyclus::Material::Ptr Enrichment::Enrich_(cyclus::Material::Ptr mat, double qty) {
   using cyclus::Material;
   using cyclus::ResCast;
   using cyclus::toolkit::Assays;
@@ -370,19 +386,18 @@ cyclus::Material::Ptr Enrichment::Enrich_(cyclus::Material::Ptr mat,
   using cyclus::toolkit::FeedQty;
   using cyclus::toolkit::TailsQty;
 
-  if (var_assay == -1){
-    var_assay = tails_assay;
-  }
 
   double prod_assay = UraniumAssayMass(mat);
-  double corrected_prod_assay = get_corrected_param(prod_assay, product_assay_uncertainty);
+  /*
+  double corrected_prod_assay =
+      get_corrected_param(prod_assay, product_assay_uncertainty);
 
   prod_assay = corrected_prod_assay;
+  */
   // get enrichment parameters
-  Assays assays(FeedAssay(), prod_assay, var_assay);
+  Assays assays(FeedAssay(), prod_assay, corrected_tails_assay);
   double swu_req = SwuRequired(qty, assays);
   double natu_req = FeedQty(qty, assays);
-
   // Determine the composition of the natural uranium
   // (ie. U-235+U-238/TotalMass)
   double pop_qty = inventory.quantity();
@@ -395,10 +410,10 @@ cyclus::Material::Ptr Enrichment::Enrich_(cyclus::Material::Ptr mat,
   nucs.insert(922380000);
   double natu_frac = mq.mass_frac(nucs);
   double feed_req = natu_req / natu_frac;
-  
+
   // if need more feed than in inventory scale down the product quantity
-  if(feed_req > inventory.quantity() ){
-    qty = qty / feed_req *inventory.quantity();
+  if (feed_req > inventory.quantity()) {
+    qty = qty / feed_req * inventory.quantity();
     feed_req = inventory.quantity();
   }
   // pop amount from inventory and blob it into one material
@@ -406,13 +421,12 @@ cyclus::Material::Ptr Enrichment::Enrich_(cyclus::Material::Ptr mat,
   try {
     // required so popping doesn't take out too much
     if (cyclus::AlmostEq(feed_req, inventory.quantity())) {
-      std::cout << " EN " << std::endl;
       r = cyclus::toolkit::Squash(inventory.PopN(inventory.count()));
     } else {
       r = inventory.Pop(feed_req, cyclus::eps_rsrc());
     }
   } catch (cyclus::Error& e) {
-    NatUConverter nc(FeedAssay(), var_assay);
+    NatUConverter nc(FeedAssay(), corrected_tails_assay);
     std::stringstream ss;
     ss << " tried to remove " << feed_req << " from its inventory of size "
        << inventory.quantity()
