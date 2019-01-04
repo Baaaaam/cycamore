@@ -108,7 +108,12 @@ void Separations::Tick() {
   if (feed.count() == 0) {
     return;
   }
-  double pop_qty = std::min(throughput, feed.quantity());
+  corrected_throughput = throughput;
+  if (throughput_uncertainty != 0) {
+    corrected_throughput =
+        get_corrected_param(throughput, throughput_uncertainty);
+  }
+  double pop_qty = std::min(corrected_throughput, feed.quantity());
   Material::Ptr mat = feed.Pop(pop_qty, cyclus::eps_rsrc());
   double orig_qty = mat->quantity();
 
@@ -198,7 +203,7 @@ Separations::GetMatlRequests() {
 
   int t = context()->time();
   int t_exit = exit_time();
-  if (t_exit >= 0 && (feed.quantity() >= (t_exit - t) * throughput)) {
+  if (t_exit >= 0 && (feed.quantity() >= (t_exit - t) * corrected_throughput)) {
     return ports;  // already have enough feed for remainder of life
   } else if (feed.space() < cyclus::eps_rsrc()) {
     return ports;

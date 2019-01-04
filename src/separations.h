@@ -105,6 +105,8 @@ class Separations
 
 
   private:
+  
+  double corrected_throughput;
 
   #pragma cyclus var { \
     "doc": "Ordered list of commodities on which to request feed material to " \
@@ -156,6 +158,15 @@ class Separations
     "units": "kg/(time step)", \
   }
   double throughput;
+
+  #pragma cyclus var {  \
+    "default": 0, \
+    "tooltip": "per time step throughput relative uncertainty", \
+    "uitype": "range", \
+    "range": [0.0, 1], \
+    "doc": "relative uncertianty on the amount of commodity that can be supplied at each time step", \
+  }
+  double throughput_uncertainty;
 
   #pragma cyclus var { \
     "doc": "Commodity on which to trade the leftover separated material " \
