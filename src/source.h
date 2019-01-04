@@ -57,7 +57,8 @@ class Source : public cyclus::Facility,
 
   virtual void InitFrom(cyclus::QueryableBackend* b);
 
-  virtual void Tick() {};
+  ///  @param time is the time to perform the tick
+  virtual void Tick();
 
   virtual void Tock() {};
 
@@ -73,6 +74,9 @@ class Source : public cyclus::Facility,
     cyclus::Material::Ptr> >& responses);
 
  private:
+  
+  double corrected_throughput;
+  
   #pragma cyclus var { \
     "tooltip": "source output commodity", \
     "doc": "Output commodity on which the source offers material.", \
@@ -115,6 +119,15 @@ class Source : public cyclus::Facility,
     "doc": "amount of commodity that can be supplied at each time step", \
   }
   double throughput;
+  
+#pragma cyclus var {  \
+    "default": 0, \
+    "tooltip": "per time step throughput relative uncertainty", \
+    "uitype": "range", \
+    "range": [0.0, 1], \
+    "doc": "relative uncertianty on the amount of commodity that can be supplied at each time step", \
+  }
+  double throughput_uncertainty;
   
   #pragma cyclus var { \
     "default": 0.0, \

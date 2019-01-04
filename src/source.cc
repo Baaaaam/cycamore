@@ -5,6 +5,8 @@
 
 #include <boost/lexical_cast.hpp>
 
+#include "uncertainty.h"
+
 namespace cycamore {
 
 Source::Source(cyclus::Context* ctx)
@@ -51,6 +53,15 @@ std::string Source::str() {
   return ss.str();
 }
 
+void Source::Tick() {
+
+  corrected_throughput = throughput;
+  if (throughput_uncertainty != 0) {
+    corrected_throughput =
+        get_corrected_param(throughput, throughput_uncertainty);
+  }
+}
+
 std::set<cyclus::BidPortfolio<cyclus::Material>::Ptr> Source::GetMatlBids(
     cyclus::CommodMap<cyclus::Material>::type& commod_requests) {
   using cyclus::Bid;
@@ -59,7 +70,7 @@ std::set<cyclus::BidPortfolio<cyclus::Material>::Ptr> Source::GetMatlBids(
   using cyclus::Material;
   using cyclus::Request;
 
-  double max_qty = std::min(throughput, inventory_size);
+  double max_qty = std::min(corrected_throughput, inventory_size);
   LOG(cyclus::LEV_INFO3, "Source") << prototype() << " is bidding up to "
                                    << max_qty << " kg of " << outcommod;
   LOG(cyclus::LEV_INFO5, "Source") << "stats: " << str();

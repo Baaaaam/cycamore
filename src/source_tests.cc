@@ -63,7 +63,7 @@ TEST_F(SourceTest, AddBids) {
 
   boost::shared_ptr< cyclus::ExchangeContext<Material> >
       ec = GetContext(nreqs, commod);
-
+  src_facility->Tick();
   std::set<BidPortfolio<Material>::Ptr> ports =
       src_facility->GetMatlBids(ec.get()->commod_requests);
 
