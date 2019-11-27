@@ -10,10 +10,7 @@ namespace cycamore {
 Source::Source(cyclus::Context* ctx)
     : cyclus::Facility(ctx),
       throughput(std::numeric_limits<double>::max()),
-      inventory_size(std::numeric_limits<double>::max()),
-      latitude(0.0),
-      longitude(0.0),
-      coordinates(latitude, longitude) {}
+      inventory_size(std::numeric_limits<double>::max()) {}
 
 Source::~Source() {}
 

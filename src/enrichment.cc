@@ -22,10 +22,7 @@ Enrichment::Enrichment(cyclus::Context* ctx)
       feed_recipe(""),
       product_commod(""),
       tails_commod(""),
-      order_prefs(true),
-      latitude(0.0),
-      longitude(0.0),
-      coordinates(latitude, longitude) {}
+      order_prefs(true) {}
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 Enrichment::~Enrichment() {}

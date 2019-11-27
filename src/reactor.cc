@@ -22,10 +22,7 @@ Reactor::Reactor(cyclus::Context* ctx)
       cycle_step(0),
       power_cap(0),
       power_name("power"),
-      discharged(false),
-      latitude(0.0),
-      longitude(0.0),
-      coordinates(latitude, longitude) {}
+      discharged(false) {}
 
 
 #pragma cyclus def clone cycamore::Reactor
